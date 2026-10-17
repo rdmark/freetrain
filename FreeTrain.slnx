@@ -1,0 +1,10 @@
+<Solution>
+  <Project Path="src/FreeTrain.Content/FreeTrain.Content.csproj" />
+  <Project Path="src/FreeTrain.Contracts/FreeTrain.Contracts.csproj" />
+  <Project Path="src/FreeTrain.Persistence/FreeTrain.Persistence.csproj" />
+  <Project Path="src/FreeTrain.Plugins.ManualController/FreeTrain.Plugins.ManualController.csproj" />
+  <Project Path="src/FreeTrain.Server/FreeTrain.Server.csproj" />
+  <Project Path="src/FreeTrain.Session/FreeTrain.Session.csproj" />
+  <Project Path="src/FreeTrain.Simulation/FreeTrain.Simulation.csproj" />
+  <Project Path="tests/FreeTrain.Tests/FreeTrain.Tests.csproj" />
+</Solution>

@@ -1,0 +1,26 @@
+{
+  "scenarioId": "reference-v1",
+  "contentVersion": "prototype-content-1",
+  "map": {
+    "width": 64,
+    "height": 64,
+    "levels": 16
+  },
+  "clockStart": "2000-04-01T08:00:00",
+  "tickMinutes": 1,
+  "seed": "477",
+  "initialCash": "1000000",
+  "initialSaveFixture": "../protocol/fixtures/save-reference.json",
+  "commandOrdering": "FIFO server sequence before each tick; events sorted by dueTick then order",
+  "initialDirection": "east",
+  "normalMoveTicks": 1,
+  "stationDwellTicks": 5,
+  "constructionCost": "100",
+  "removalRefund": "0",
+  "proposedRulesRequireOwnerReview": [
+    "Discrete one-tile movement per minute and five-tick station dwell.",
+    "Raised track at z=1 is pre-supported; foundations are not charged in the fixture.",
+    "Prototype track cost is 100 and removal refund is zero.",
+    "Automatic controller stays on the loop; manual siding route stops at buffer."
+  ]
+}

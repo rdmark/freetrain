@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net10.0": {
+      "freetrain.contracts": {
+        "type": "Project"
+      },
+      "freetrain.persistence": {
+        "type": "Project",
+        "dependencies": {
+          "FreeTrain.Simulation": "[1.0.0, )"
+        }
+      },
+      "freetrain.simulation": {
+        "type": "Project"
+      }
+    }
+  }
+}

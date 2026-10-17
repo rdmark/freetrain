@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../FreeTrain.Simulation/FreeTrain.Simulation.csproj" />
+  </ItemGroup>
+</Project>

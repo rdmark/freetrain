@@ -1,0 +1,11 @@
+.DS_Store
+.tools/
+**/node_modules/
+web/dist/
+web/test-results/
+web/playwright-report/
+src/**/bin/
+src/**/obj/
+tests/**/bin/
+tests/**/obj/
+TestResults/

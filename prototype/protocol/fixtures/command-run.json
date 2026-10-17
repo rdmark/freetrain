@@ -1,0 +1,8 @@
+{
+  "type": "command",
+  "requestId": "fixture-1",
+  "expectedWorldEpoch": "1",
+  "payload": {
+    "kind": "run"
+  }
+}

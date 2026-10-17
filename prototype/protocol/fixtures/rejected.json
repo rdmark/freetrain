@@ -1,0 +1,9 @@
+{
+  "type": "rejected",
+  "requestId": "fixture-invalid",
+  "code": "invalidPlacement",
+  "arguments": {
+    "x": "64",
+    "y": "8"
+  }
+}

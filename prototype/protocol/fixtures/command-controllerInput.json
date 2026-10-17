@@ -1,0 +1,16 @@
+{
+  "type": "command",
+  "requestId": "fixture-8",
+  "expectedWorldEpoch": "1",
+  "payload": {
+    "kind": "controllerInput",
+    "trainId": "train-1",
+    "inputSequence": "1",
+    "pass": false,
+    "depart": true,
+    "reverse": false,
+    "left": false,
+    "right": false,
+    "reset": false
+  }
+}

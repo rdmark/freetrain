@@ -1,0 +1,14 @@
+{
+  "type": "command",
+  "requestId": "fixture-6",
+  "expectedWorldEpoch": "1",
+  "payload": {
+    "kind": "removeTrack",
+    "position": {
+      "x": 36,
+      "y": 16,
+      "z": 1
+    },
+    "expectedRevision": "0"
+  }
+}

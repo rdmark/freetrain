@@ -1,0 +1,17 @@
+{
+  "type": "delta",
+  "worldEpoch": "1",
+  "baseRevision": "0",
+  "revision": "1",
+  "tick": "1",
+  "trains": [],
+  "stations": [],
+  "buildings": [],
+  "removed": {
+    "trainIds": [],
+    "stationIds": [],
+    "buildingIds": [
+      "building-1"
+    ]
+  }
+}

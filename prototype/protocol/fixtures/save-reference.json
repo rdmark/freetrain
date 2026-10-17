@@ -1,0 +1,710 @@
+{
+  "saveVersion": 1,
+  "contentVersion": "prototype-content-1",
+  "scenarioId": "reference-v1",
+  "world": {
+    "tick": "0",
+    "paused": true,
+    "cash": "1000000",
+    "randomState": "477",
+    "tracks": [
+      {
+        "position": {
+          "x": 9,
+          "y": 8,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 9,
+          "y": 24,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 10,
+          "y": 8,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 10,
+          "y": 24,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 11,
+          "y": 8,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 11,
+          "y": 24,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 12,
+          "y": 8,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 12,
+          "y": 24,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 13,
+          "y": 8,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 13,
+          "y": 24,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 14,
+          "y": 8,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 14,
+          "y": 24,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 15,
+          "y": 8,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 15,
+          "y": 24,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 16,
+          "y": 8,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 16,
+          "y": 24,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 17,
+          "y": 8,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 17,
+          "y": 24,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 18,
+          "y": 8,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 18,
+          "y": 24,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 19,
+          "y": 8,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 19,
+          "y": 24,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 20,
+          "y": 8,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 20,
+          "y": 24,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 21,
+          "y": 8,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 21,
+          "y": 24,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 22,
+          "y": 8,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 22,
+          "y": 24,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 23,
+          "y": 8,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 23,
+          "y": 24,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 24,
+          "y": 8,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 24,
+          "y": 24,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 25,
+          "y": 8,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 25,
+          "y": 24,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 26,
+          "y": 8,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 26,
+          "y": 24,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 27,
+          "y": 8,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 27,
+          "y": 24,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 8,
+          "y": 9,
+          "z": 1
+        },
+        "shape": "northSouth"
+      },
+      {
+        "position": {
+          "x": 28,
+          "y": 9,
+          "z": 1
+        },
+        "shape": "northSouth"
+      },
+      {
+        "position": {
+          "x": 8,
+          "y": 10,
+          "z": 1
+        },
+        "shape": "northSouth"
+      },
+      {
+        "position": {
+          "x": 28,
+          "y": 10,
+          "z": 1
+        },
+        "shape": "northSouth"
+      },
+      {
+        "position": {
+          "x": 8,
+          "y": 11,
+          "z": 1
+        },
+        "shape": "northSouth"
+      },
+      {
+        "position": {
+          "x": 28,
+          "y": 11,
+          "z": 1
+        },
+        "shape": "northSouth"
+      },
+      {
+        "position": {
+          "x": 8,
+          "y": 12,
+          "z": 1
+        },
+        "shape": "northSouth"
+      },
+      {
+        "position": {
+          "x": 28,
+          "y": 12,
+          "z": 1
+        },
+        "shape": "northSouth"
+      },
+      {
+        "position": {
+          "x": 8,
+          "y": 13,
+          "z": 1
+        },
+        "shape": "northSouth"
+      },
+      {
+        "position": {
+          "x": 28,
+          "y": 13,
+          "z": 1
+        },
+        "shape": "northSouth"
+      },
+      {
+        "position": {
+          "x": 8,
+          "y": 14,
+          "z": 1
+        },
+        "shape": "northSouth"
+      },
+      {
+        "position": {
+          "x": 28,
+          "y": 14,
+          "z": 1
+        },
+        "shape": "northSouth"
+      },
+      {
+        "position": {
+          "x": 8,
+          "y": 15,
+          "z": 1
+        },
+        "shape": "northSouth"
+      },
+      {
+        "position": {
+          "x": 28,
+          "y": 15,
+          "z": 1
+        },
+        "shape": "northSouth"
+      },
+      {
+        "position": {
+          "x": 8,
+          "y": 16,
+          "z": 1
+        },
+        "shape": "northSouth"
+      },
+      {
+        "position": {
+          "x": 28,
+          "y": 16,
+          "z": 1
+        },
+        "shape": "junctionE"
+      },
+      {
+        "position": {
+          "x": 8,
+          "y": 17,
+          "z": 1
+        },
+        "shape": "northSouth"
+      },
+      {
+        "position": {
+          "x": 28,
+          "y": 17,
+          "z": 1
+        },
+        "shape": "northSouth"
+      },
+      {
+        "position": {
+          "x": 8,
+          "y": 18,
+          "z": 1
+        },
+        "shape": "northSouth"
+      },
+      {
+        "position": {
+          "x": 28,
+          "y": 18,
+          "z": 1
+        },
+        "shape": "northSouth"
+      },
+      {
+        "position": {
+          "x": 8,
+          "y": 19,
+          "z": 1
+        },
+        "shape": "northSouth"
+      },
+      {
+        "position": {
+          "x": 28,
+          "y": 19,
+          "z": 1
+        },
+        "shape": "northSouth"
+      },
+      {
+        "position": {
+          "x": 8,
+          "y": 20,
+          "z": 1
+        },
+        "shape": "northSouth"
+      },
+      {
+        "position": {
+          "x": 28,
+          "y": 20,
+          "z": 1
+        },
+        "shape": "northSouth"
+      },
+      {
+        "position": {
+          "x": 8,
+          "y": 21,
+          "z": 1
+        },
+        "shape": "northSouth"
+      },
+      {
+        "position": {
+          "x": 28,
+          "y": 21,
+          "z": 1
+        },
+        "shape": "northSouth"
+      },
+      {
+        "position": {
+          "x": 8,
+          "y": 22,
+          "z": 1
+        },
+        "shape": "northSouth"
+      },
+      {
+        "position": {
+          "x": 28,
+          "y": 22,
+          "z": 1
+        },
+        "shape": "northSouth"
+      },
+      {
+        "position": {
+          "x": 8,
+          "y": 23,
+          "z": 1
+        },
+        "shape": "northSouth"
+      },
+      {
+        "position": {
+          "x": 28,
+          "y": 23,
+          "z": 1
+        },
+        "shape": "northSouth"
+      },
+      {
+        "position": {
+          "x": 8,
+          "y": 8,
+          "z": 1
+        },
+        "shape": "curveSE"
+      },
+      {
+        "position": {
+          "x": 28,
+          "y": 8,
+          "z": 1
+        },
+        "shape": "curveSW"
+      },
+      {
+        "position": {
+          "x": 28,
+          "y": 24,
+          "z": 1
+        },
+        "shape": "curveNW"
+      },
+      {
+        "position": {
+          "x": 8,
+          "y": 24,
+          "z": 1
+        },
+        "shape": "curveNE"
+      },
+      {
+        "position": {
+          "x": 29,
+          "y": 16,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 30,
+          "y": 16,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 31,
+          "y": 16,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 32,
+          "y": 16,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 33,
+          "y": 16,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 34,
+          "y": 16,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 35,
+          "y": 16,
+          "z": 1
+        },
+        "shape": "eastWest"
+      },
+      {
+        "position": {
+          "x": 36,
+          "y": 16,
+          "z": 1
+        },
+        "shape": "buffer"
+      }
+    ],
+    "trains": [
+      {
+        "id": "train-1",
+        "definitionId": "prototype.train.three-car",
+        "position": {
+          "x": 12,
+          "y": 8,
+          "z": 1
+        },
+        "direction": "east",
+        "cars": 3,
+        "controller": "automatic",
+        "nextMoveTick": "1"
+      }
+    ],
+    "stations": [
+      {
+        "id": "station-1",
+        "name": "中央駅",
+        "position": {
+          "x": 20,
+          "y": 8,
+          "z": 1
+        },
+        "dwellTicks": 5
+      }
+    ],
+    "buildings": [
+      {
+        "id": "building-1",
+        "definitionId": "{B32B765C-C74C-4BD9-84C6-E75A3E6DFC27}",
+        "position": {
+          "x": 16,
+          "y": 16,
+          "z": 0
+        },
+        "height": 1
+      },
+      {
+        "id": "building-2",
+        "definitionId": "{C7536844-7CD0-49e0-8982-2819F5792B32}",
+        "position": {
+          "x": 34,
+          "y": 22,
+          "z": 0
+        },
+        "height": 3
+      }
+    ],
+    "events": [
+      {
+        "dueTick": "1",
+        "order": "0",
+        "kind": "moveTrain",
+        "subjectId": "train-1"
+      }
+    ]
+  }
+}

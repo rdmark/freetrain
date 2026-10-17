@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../FreeTrain.Simulation/FreeTrain.Simulation.csproj" />
+    <ProjectReference Include="../FreeTrain.Contracts/FreeTrain.Contracts.csproj" />
+    <ProjectReference Include="../FreeTrain.Persistence/FreeTrain.Persistence.csproj" />
+  </ItemGroup>
+</Project>

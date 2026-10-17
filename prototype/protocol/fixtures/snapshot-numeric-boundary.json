@@ -1,0 +1,61 @@
+{
+  "type": "snapshot",
+  "worldEpoch": "1",
+  "revision": "9007199254740993",
+  "tick": "9223372036854775807",
+  "paused": true,
+  "cash": "-9223372036854775808",
+  "map": {
+    "width": 64,
+    "height": 64,
+    "levels": 16
+  },
+  "trains": [
+    {
+      "id": "train-1",
+      "revision": "0",
+      "name": "Local 1",
+      "position": {
+        "x": 12,
+        "y": 8,
+        "z": 1
+      },
+      "cars": 3,
+      "controller": "automatic"
+    }
+  ],
+  "stations": [
+    {
+      "id": "station-1",
+      "revision": "0",
+      "name": "中央駅",
+      "position": {
+        "x": 20,
+        "y": 8,
+        "z": 1
+      }
+    }
+  ],
+  "buildings": [
+    {
+      "id": "building-1",
+      "definitionId": "{B32B765C-C74C-4BD9-84C6-E75A3E6DFC27}",
+      "position": {
+        "x": 16,
+        "y": 16,
+        "z": 0
+      },
+      "height": 1
+    },
+    {
+      "id": "building-2",
+      "definitionId": "{C7536844-7CD0-49e0-8982-2819F5792B32}",
+      "position": {
+        "x": 34,
+        "y": 22,
+        "z": 0
+      },
+      "height": 3
+    }
+  ]
+}

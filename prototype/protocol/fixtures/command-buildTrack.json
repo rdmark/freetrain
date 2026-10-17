@@ -1,0 +1,14 @@
+{
+  "type": "command",
+  "requestId": "fixture-5",
+  "expectedWorldEpoch": "1",
+  "payload": {
+    "kind": "buildTrack",
+    "position": {
+      "x": 37,
+      "y": 16,
+      "z": 1
+    },
+    "shape": "eastWest"
+  }
+}

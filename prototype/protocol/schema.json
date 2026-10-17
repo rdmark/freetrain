@@ -1,0 +1,903 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://freetrain.invalid/prototype/contracts-v1.schema.json",
+  "title": "PrototypeDocument",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/WireMessage"
+    },
+    {
+      "$ref": "#/$defs/SaveDocument"
+    }
+  ],
+  "$defs": {
+    "Counter": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)$",
+      "format": "uint63"
+    },
+    "Money": {
+      "type": "string",
+      "pattern": "^(0|-?[1-9][0-9]*)$",
+      "format": "int64"
+    },
+    "Position": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "y": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "z": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "z"
+      ]
+    },
+    "Map": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "levels": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        }
+      },
+      "required": [
+        "width",
+        "height",
+        "levels"
+      ]
+    },
+    "Train": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "$ref": "#/$defs/Counter"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "position": {
+          "$ref": "#/$defs/Position"
+        },
+        "cars": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "controller": {
+          "enum": [
+            "automatic",
+            "manual"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "revision",
+        "name",
+        "position",
+        "cars",
+        "controller"
+      ]
+    },
+    "Station": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "$ref": "#/$defs/Counter"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "position": {
+          "$ref": "#/$defs/Position"
+        }
+      },
+      "required": [
+        "id",
+        "revision",
+        "name",
+        "position"
+      ]
+    },
+    "Building": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "definitionId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "position": {
+          "$ref": "#/$defs/Position"
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        }
+      },
+      "required": [
+        "id",
+        "definitionId",
+        "position",
+        "height"
+      ]
+    },
+    "Removed": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "trainIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "stationIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "buildingIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "trainIds",
+        "stationIds",
+        "buildingIds"
+      ]
+    },
+    "Snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "snapshot"
+        },
+        "worldEpoch": {
+          "$ref": "#/$defs/Counter"
+        },
+        "revision": {
+          "$ref": "#/$defs/Counter"
+        },
+        "tick": {
+          "$ref": "#/$defs/Counter"
+        },
+        "paused": {
+          "type": "boolean"
+        },
+        "cash": {
+          "$ref": "#/$defs/Money"
+        },
+        "map": {
+          "$ref": "#/$defs/Map"
+        },
+        "trains": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Train"
+          }
+        },
+        "stations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Station"
+          }
+        },
+        "buildings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Building"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "worldEpoch",
+        "revision",
+        "tick",
+        "paused",
+        "cash",
+        "map",
+        "trains",
+        "stations",
+        "buildings"
+      ]
+    },
+    "Delta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "delta"
+        },
+        "worldEpoch": {
+          "$ref": "#/$defs/Counter"
+        },
+        "baseRevision": {
+          "$ref": "#/$defs/Counter"
+        },
+        "revision": {
+          "$ref": "#/$defs/Counter"
+        },
+        "tick": {
+          "$ref": "#/$defs/Counter"
+        },
+        "trains": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Train"
+          }
+        },
+        "stations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Station"
+          }
+        },
+        "buildings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Building"
+          }
+        },
+        "removed": {
+          "$ref": "#/$defs/Removed"
+        }
+      },
+      "required": [
+        "type",
+        "worldEpoch",
+        "baseRevision",
+        "revision",
+        "tick",
+        "trains",
+        "stations",
+        "buildings",
+        "removed"
+      ]
+    },
+    "CommandPayload": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "run"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "pause"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "step"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "renameStation"
+            },
+            "stationId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "expectedRevision": {
+              "$ref": "#/$defs/Counter"
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            }
+          },
+          "required": [
+            "kind",
+            "stationId",
+            "expectedRevision",
+            "name"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "buildTrack"
+            },
+            "position": {
+              "$ref": "#/$defs/Position"
+            },
+            "shape": {
+              "enum": [
+                "eastWest",
+                "northSouth",
+                "curveSE",
+                "curveSW",
+                "curveNE",
+                "curveNW",
+                "junctionE",
+                "buffer"
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "position",
+            "shape"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "removeTrack"
+            },
+            "position": {
+              "$ref": "#/$defs/Position"
+            },
+            "expectedRevision": {
+              "$ref": "#/$defs/Counter"
+            }
+          },
+          "required": [
+            "kind",
+            "position",
+            "expectedRevision"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "setController"
+            },
+            "trainId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "expectedRevision": {
+              "$ref": "#/$defs/Counter"
+            },
+            "controller": {
+              "enum": [
+                "automatic",
+                "manual"
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "trainId",
+            "expectedRevision",
+            "controller"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "controllerInput"
+            },
+            "trainId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "inputSequence": {
+              "$ref": "#/$defs/Counter"
+            },
+            "pass": {
+              "type": "boolean"
+            },
+            "depart": {
+              "type": "boolean"
+            },
+            "reverse": {
+              "type": "boolean"
+            },
+            "left": {
+              "type": "boolean"
+            },
+            "right": {
+              "type": "boolean"
+            },
+            "reset": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "kind",
+            "trainId",
+            "inputSequence",
+            "pass",
+            "depart",
+            "reverse",
+            "left",
+            "right",
+            "reset"
+          ]
+        }
+      ]
+    },
+    "Command": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "command"
+        },
+        "requestId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expectedWorldEpoch": {
+          "$ref": "#/$defs/Counter"
+        },
+        "payload": {
+          "$ref": "#/$defs/CommandPayload"
+        }
+      },
+      "required": [
+        "type",
+        "requestId",
+        "expectedWorldEpoch",
+        "payload"
+      ]
+    },
+    "Accepted": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "accepted"
+        },
+        "requestId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "worldEpoch": {
+          "$ref": "#/$defs/Counter"
+        },
+        "sequence": {
+          "$ref": "#/$defs/Counter"
+        },
+        "tick": {
+          "$ref": "#/$defs/Counter"
+        },
+        "revision": {
+          "$ref": "#/$defs/Counter"
+        }
+      },
+      "required": [
+        "type",
+        "requestId",
+        "worldEpoch",
+        "sequence",
+        "tick",
+        "revision"
+      ]
+    },
+    "Rejected": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "rejected"
+        },
+        "requestId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "code": {
+          "enum": [
+            "invalidPlacement",
+            "staleEpoch",
+            "staleRevision",
+            "insufficientFunds",
+            "notAuthorized",
+            "queueFull",
+            "invalidInput"
+          ]
+        },
+        "arguments": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "requestId",
+        "code",
+        "arguments"
+      ]
+    },
+    "Join": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "join"
+        },
+        "protocolVersion": {
+          "const": 1
+        },
+        "contentVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "serverIncarnation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "participantId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "worldEpoch": {
+          "$ref": "#/$defs/Counter"
+        },
+        "snapshot": {
+          "$ref": "#/$defs/Snapshot"
+        }
+      },
+      "required": [
+        "type",
+        "protocolVersion",
+        "contentVersion",
+        "serverIncarnation",
+        "sessionId",
+        "participantId",
+        "worldEpoch",
+        "snapshot"
+      ]
+    },
+    "SavedTrack": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "position": {
+          "$ref": "#/$defs/Position"
+        },
+        "shape": {
+          "enum": [
+            "eastWest",
+            "northSouth",
+            "curveSE",
+            "curveSW",
+            "curveNE",
+            "curveNW",
+            "junctionE",
+            "buffer"
+          ]
+        }
+      },
+      "required": [
+        "position",
+        "shape"
+      ]
+    },
+    "SavedTrain": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "definitionId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "position": {
+          "$ref": "#/$defs/Position"
+        },
+        "direction": {
+          "enum": [
+            "north",
+            "south",
+            "east",
+            "west"
+          ]
+        },
+        "cars": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "controller": {
+          "enum": [
+            "automatic",
+            "manual"
+          ]
+        },
+        "nextMoveTick": {
+          "$ref": "#/$defs/Counter"
+        }
+      },
+      "required": [
+        "id",
+        "definitionId",
+        "position",
+        "direction",
+        "cars",
+        "controller",
+        "nextMoveTick"
+      ]
+    },
+    "SavedStation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "position": {
+          "$ref": "#/$defs/Position"
+        },
+        "dwellTicks": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "position",
+        "dwellTicks"
+      ]
+    },
+    "SavedBuilding": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "definitionId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "position": {
+          "$ref": "#/$defs/Position"
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        }
+      },
+      "required": [
+        "id",
+        "definitionId",
+        "position",
+        "height"
+      ]
+    },
+    "ScheduledEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "dueTick": {
+          "$ref": "#/$defs/Counter"
+        },
+        "order": {
+          "$ref": "#/$defs/Counter"
+        },
+        "kind": {
+          "enum": [
+            "moveTrain",
+            "releaseStation"
+          ]
+        },
+        "subjectId": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "dueTick",
+        "order",
+        "kind",
+        "subjectId"
+      ]
+    },
+    "SavedWorld": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tick": {
+          "$ref": "#/$defs/Counter"
+        },
+        "paused": {
+          "type": "boolean"
+        },
+        "cash": {
+          "$ref": "#/$defs/Money"
+        },
+        "randomState": {
+          "$ref": "#/$defs/Counter"
+        },
+        "tracks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SavedTrack"
+          }
+        },
+        "trains": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SavedTrain"
+          }
+        },
+        "stations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SavedStation"
+          }
+        },
+        "buildings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SavedBuilding"
+          }
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ScheduledEvent"
+          }
+        }
+      },
+      "required": [
+        "tick",
+        "paused",
+        "cash",
+        "randomState",
+        "tracks",
+        "trains",
+        "stations",
+        "buildings",
+        "events"
+      ]
+    },
+    "SaveDocument": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "saveVersion": {
+          "const": 1
+        },
+        "contentVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scenarioId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "world": {
+          "$ref": "#/$defs/SavedWorld"
+        }
+      },
+      "required": [
+        "saveVersion",
+        "contentVersion",
+        "scenarioId",
+        "world"
+      ]
+    },
+    "WireMessage": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/Join"
+        },
+        {
+          "$ref": "#/$defs/Command"
+        },
+        {
+          "$ref": "#/$defs/Accepted"
+        },
+        {
+          "$ref": "#/$defs/Rejected"
+        },
+        {
+          "$ref": "#/$defs/Snapshot"
+        },
+        {
+          "$ref": "#/$defs/Delta"
+        }
+      ]
+    }
+  }
+}

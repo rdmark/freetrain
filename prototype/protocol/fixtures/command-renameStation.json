@@ -1,0 +1,11 @@
+{
+  "type": "command",
+  "requestId": "fixture-4",
+  "expectedWorldEpoch": "1",
+  "payload": {
+    "kind": "renameStation",
+    "stationId": "station-1",
+    "expectedRevision": "0",
+    "name": "新中央駅"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "type": "command",
+  "requestId": "fixture-2",
+  "expectedWorldEpoch": "1",
+  "payload": {
+    "kind": "pause"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "sceneId": "load-v1",
+  "map": {
+    "width": 256,
+    "height": 256,
+    "levels": 16
+  },
+  "terrainTiles": 65536,
+  "trackTiles": 4096,
+  "trains": 100,
+  "carsPerTrain": 3,
+  "fixedBuildings": 1000,
+  "variableBuildings": 1000,
+  "variableBuildingHeight": 5,
+  "spriteInstances": 78332,
+  "spriteCounting": "65536 terrain + 4096 track + 300 car + 1000 fixed + 5000 variable layers + 2400 effect overlays",
+  "effectOverlaySprites": 2400,
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "seed": "477",
+  "status": "Specified counts only; generator, visible-count measurements, and profiling arrive in stages 5 and 7."
+}
