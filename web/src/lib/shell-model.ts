@@ -1,5 +1,5 @@
-import type { CommandPayload } from '../generated/contracts.ts';
-import type { FixtureBehavior, ReadState, SessionClient } from './session-client.ts';
+import type { CommandPayload, Rejected } from '../generated/contracts.ts';
+import type { ConnectionStatus, FixtureBehavior, ReadState, SessionClient } from './session-client.ts';
 import type { Locale } from './localization.ts';
 
 // Synthetic catalog load fixture; these are UI variants, not imported content.
@@ -13,8 +13,8 @@ export interface ShellState {
   draft: string;
   composing: boolean;
   pending: boolean;
-  connection: 'loading' | 'ready' | 'disconnected';
-  feedback: 'idle' | 'waiting' | 'accepted' | 'invalidInput' | 'staleRevision' | 'unavailable';
+  connection: ConnectionStatus;
+  feedback: Rejected['code'] | 'idle' | 'waiting' | 'accepted' | 'unavailable' | 'unresolved';
   behavior: FixtureBehavior;
   selectedBuilding: string;
 }
@@ -22,9 +22,9 @@ export function createShellModel(connect: () => SessionClient, locale: Locale, r
   let state: ShellState = { locale, draft: '', composing: false, pending: false, connection: 'loading', feedback: 'idle', behavior: 'normal', selectedBuilding: catalog[0].id };
   let client: SessionClient | undefined;
   let unsubscribe: (() => void) | undefined;
+  let unsubscribeStatus: (() => void) | undefined;
   let timer: ReturnType<typeof setTimeout> | undefined;
   let generation = 0;
-  let request = 0;
   let disposed = false;
   let dirty = false;
   const listeners = new Set<(state: ShellState) => void>();
@@ -36,18 +36,25 @@ export function createShellModel(connect: () => SessionClient, locale: Locale, r
     generation++;
     clearTimeout(timer);
     unsubscribe?.(); unsubscribe = undefined;
+    unsubscribeStatus?.(); unsubscribeStatus = undefined;
     client?.dispose(); client = undefined;
   };
   const reconnect = () => {
     if (disposed) return;
+    const ambiguous = (state.pending && client?.mode === 'remote') || state.feedback === 'unresolved';
     release();
-    update({ connection: 'loading', pending: false, feedback: 'idle' });
+    update({ connection: 'loading', pending: false, feedback: ambiguous ? 'unresolved' : 'idle' });
     timer = setTimeout(() => {
       try {
         client = connect();
         unsubscribe = client.subscribe(read => {
-          update({ read, connection: 'ready', ...(!dirty ? { draft: read.stations[0].name } : {}) });
+          update({ read, connection: 'ready', ...(!dirty ? { draft: read.stations[0]?.name ?? '' } : {}) });
         });
+        unsubscribeStatus = client.subscribeStatus?.(connection => update({ connection,
+          ...(connection !== 'ready' ? { pending: false } : {}),
+          ...(client?.unresolved ? { feedback: 'unresolved' } : connection === 'disconnected' ? { feedback: 'unavailable' }
+            : connection === 'ready' && state.feedback === 'unavailable' ? { feedback: 'idle' } : {}),
+        }));
       } catch { release(); update({ connection: 'disconnected', feedback: 'unavailable' }); }
     }, reconnectDelay);
   };
@@ -57,7 +64,7 @@ export function createShellModel(connect: () => SessionClient, locale: Locale, r
     const submittedDraft = state.draft;
     update({ pending: true, feedback: 'waiting' });
     try {
-      const result = await client.send({ type: 'command', requestId: `ui-${++request}`, expectedWorldEpoch: state.read!.worldEpoch, payload });
+      const result = await client.send({ type: 'command', requestId: crypto.randomUUID(), expectedWorldEpoch: state.read!.worldEpoch, payload });
       if (disposed || current !== generation) return;
       if (result.type === 'accepted') {
         if (payload.kind === 'renameStation' && submittedDraft === state.draft) {
@@ -66,10 +73,10 @@ export function createShellModel(connect: () => SessionClient, locale: Locale, r
         }
         update({ pending: false, feedback: 'accepted' });
       } else {
-        update({ pending: false, feedback: result.code === 'invalidInput' || result.code === 'staleRevision' ? result.code : 'unavailable' });
+        update({ pending: false, feedback: result.code });
       }
     } catch {
-      if (!disposed && current === generation) update({ pending: false, feedback: 'unavailable' });
+      if (!disposed && current === generation) update({ pending: false, feedback: client?.unresolved ? 'unresolved' : 'unavailable' });
     }
   };
   reconnect();

@@ -1,12 +1,14 @@
 # FreeTrain Web
 
-The prototype now runs the deterministic reference game headlessly with an owning
-session queue, rail/train/station rules, construction accounting, and explicit
-manual-controller input. The bilingual browser is an **interactive UI fixture**;
-HTTP/WebSocket gameplay, map rendering, and working save/load arrive in later stages.
-Svelte is the selected shell after the shared-fixture comparison with plain
-TypeScript. See [the Stage 2 implementation](tmp/web-prototype-headless.md) and
-[Stage 3 comparison report](tmp/web-prototype-ui-comparison.md).
+The bilingual Svelte browser now drives the deterministic reference game through
+real HTTP/WebSocket transport and an authoritative C# session. Run/pause/step,
+controller changes and Japanese station rename use committed server state.
+Reconnect/refresh recover the current game. Map rendering and construction tools
+arrive in Stage 5; durable saves/checkpoints arrive in Stage 6.
+
+See the [network slice report and protocol/limits](tmp/web-prototype-network.md),
+[Stage 2 implementation](tmp/web-prototype-headless.md), and
+[UI comparison decision](tmp/web-prototype-ui-comparison.md).
 
 ## Prerequisites and checks
 
@@ -56,15 +58,25 @@ dotnet run --project src/FreeTrain.Server --no-launch-profile
 deno task --cwd web dev
 ```
 
-Open the Vite loopback URL printed in the second terminal. The server
-binds to `http://127.0.0.1:5080` by default; `GET /health` returns headless
-status. The fixture client does not contact it. Its toolbar, controller selector
-and station form use simulated confirmations, with normal/delayed/rejected
-responses and reconnect available for review. Reload resets the fixture.
-`web/dist/` contains only the selected Svelte static
-deployment artifact; production serves it alongside the C# backend without a
-JavaScript server runtime. The plain TypeScript experiment has been removed;
-the comparison decision and historical measurements remain in the report.
+Open the Vite loopback URL printed in the second terminal. The server binds to
+`http://127.0.0.1:5080`; Vite proxies `/api` HTTP and WebSocket traffic to it.
+`GET /health` returns network-stage status. Commands and train positions now come
+from the real headless game. The map and building catalog remain placeholders.
+Only one operator socket can control the game at a time.
+
+For a remote binding, configure `FreeTrain__OperatorSecret` on the server. The
+browser exchanges the access key for an HttpOnly, SameSite cookie. Keep the static
+client and service behind one HTTPS origin; deployment and HTTPS/WSS verification
+remain Stage 7. No secret belongs in frontend configuration. Optional explicit
+origins use `FreeTrain__AllowedOrigins__0`; lifecycle and queue settings use
+`FreeTrain__Network__<Property>`. See the network report for defaults and limits.
+
+The game clears held input on disconnect, pauses after one second, and retains an
+idle game in memory for five minutes before starting a fresh paused world with a
+new epoch. Restart also starts a fresh game; there are no durable saves yet.
+Uncertain command outcomes are shown after reconnect and are never replayed across
+connections. `web/dist/` contains the Svelte static artifact; production needs no
+Deno/Node frontend process.
 
 If using the workspace-local SDK installed during the first implementation,
 prepend `$PWD/.tools/dotnet` to `PATH`. `.tools/` is ignored and not required by

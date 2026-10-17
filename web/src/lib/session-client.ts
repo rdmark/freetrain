@@ -3,9 +3,12 @@ import type { Accepted, Command, Rejected, Snapshot } from '../generated/contrac
 
 type DeepReadonly<T> = T extends object ? { readonly [K in keyof T]: DeepReadonly<T[K]> } : T;
 export type ReadState = DeepReadonly<Snapshot>;
+export type ConnectionStatus = 'loading' | 'ready' | 'disconnected' | 'accessRequired' | 'incompatible';
 export interface SessionClient {
   readonly mode: 'fixture' | 'remote';
   subscribe(listener: (state: ReadState) => void): () => void;
+  subscribeStatus?(listener: (status: ConnectionStatus) => void): () => void;
+  readonly unresolved?: boolean;
   send(command: Command): Promise<Accepted | Rejected>;
   dispose(): void;
 }

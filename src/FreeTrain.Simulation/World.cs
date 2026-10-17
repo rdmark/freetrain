@@ -75,6 +75,17 @@ public sealed class World
     }
 
     public void SetPaused(bool value) { Paused = value; Revision++; }
+    public void ClearInputs()
+    {
+        foreach (var train in trains.Values)
+        {
+            if (train.InputExpiresAt == null) continue;
+            train.Input = default;
+            train.InputExpiresAt = null;
+            train.Revision++;
+            Revision++;
+        }
+    }
     public string? RenameStation(string id, long expectedRevision, string name)
     {
         if (!stations.TryGetValue(id, out var station) || string.IsNullOrWhiteSpace(name) || name.Length > 120 || name.Any(char.IsControl)) return "invalidInput";

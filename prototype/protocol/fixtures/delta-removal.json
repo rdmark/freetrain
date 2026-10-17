@@ -12,6 +12,16 @@
     "stationIds": [],
     "buildingIds": [
       "building-1"
+    ],
+    "trackPositions": [
+      {
+        "x": 24,
+        "y": 16,
+        "z": 1
+      }
     ]
-  }
+  },
+  "paused": true,
+  "cash": "1000000",
+  "tracks": []
 }

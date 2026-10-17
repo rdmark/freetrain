@@ -1,7 +1,7 @@
 /* Generated from prototype/protocol/schema.json. Run deno task generate:contracts. */
 
 export type PrototypeDocument = WireMessage | SaveDocument;
-export type WireMessage = Join | Command | Accepted | Rejected | Snapshot | Delta;
+export type WireMessage = Join | Command | Accepted | Rejected | Snapshot | Delta | Resync | Heartbeat | InputReset;
 export type Counter = string;
 export type Money = string;
 export type CommandPayload =
@@ -136,7 +136,9 @@ export interface Rejected {
     | "insufficientFunds"
     | "notAuthorized"
     | "queueFull"
-    | "invalidInput";
+    | "invalidInput"
+    | "requestConflict"
+    | "retryWindowFull";
   arguments: {
     [k: string]: string;
   };
@@ -151,11 +153,25 @@ export interface Delta {
   stations: Station[];
   buildings: Building[];
   removed: Removed;
+  paused: boolean;
+  cash: Money;
+  tracks: Track[];
 }
 export interface Removed {
   trainIds: string[];
   stationIds: string[];
   buildingIds: string[];
+  trackPositions: Position[];
+}
+export interface Resync {
+  type: "resync";
+}
+export interface Heartbeat {
+  type: "heartbeat";
+}
+export interface InputReset {
+  type: "inputReset";
+  pause: boolean;
 }
 export interface SaveDocument {
   saveVersion: 1;

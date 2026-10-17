@@ -216,12 +216,19 @@
             "type": "string",
             "minLength": 1
           }
+        },
+        "trackPositions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Position"
+          }
         }
       },
       "required": [
         "trainIds",
         "stationIds",
-        "buildingIds"
+        "buildingIds",
+        "trackPositions"
       ]
     },
     "Snapshot": {
@@ -327,6 +334,18 @@
         },
         "removed": {
           "$ref": "#/$defs/Removed"
+        },
+        "paused": {
+          "type": "boolean"
+        },
+        "cash": {
+          "$ref": "#/$defs/Money"
+        },
+        "tracks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Track"
+          }
         }
       },
       "required": [
@@ -338,7 +357,10 @@
         "trains",
         "stations",
         "buildings",
-        "removed"
+        "removed",
+        "paused",
+        "cash",
+        "tracks"
       ]
     },
     "CommandPayload": {
@@ -539,7 +561,8 @@
         },
         "requestId": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "maxLength": 128
         },
         "expectedWorldEpoch": {
           "$ref": "#/$defs/Counter"
@@ -607,7 +630,9 @@
             "insufficientFunds",
             "notAuthorized",
             "queueFull",
-            "invalidInput"
+            "invalidInput",
+            "requestConflict",
+            "retryWindowFull"
           ]
         },
         "arguments": {
@@ -929,6 +954,15 @@
         },
         {
           "$ref": "#/$defs/Delta"
+        },
+        {
+          "$ref": "#/$defs/Resync"
+        },
+        {
+          "$ref": "#/$defs/Heartbeat"
+        },
+        {
+          "$ref": "#/$defs/InputReset"
         }
       ]
     },
@@ -959,6 +993,46 @@
         "position",
         "shape",
         "revision"
+      ]
+    },
+    "Resync": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "resync"
+        }
+      },
+      "required": [
+        "type"
+      ]
+    },
+    "Heartbeat": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "heartbeat"
+        }
+      },
+      "required": [
+        "type"
+      ]
+    },
+    "InputReset": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "inputReset"
+        },
+        "pause": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "pause"
       ]
     }
   }

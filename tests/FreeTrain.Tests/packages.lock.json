@@ -108,6 +108,15 @@
           "FreeTrain.Simulation": "[1.0.0, )"
         }
       },
+      "freetrain.server": {
+        "type": "Project",
+        "dependencies": {
+          "FreeTrain.Content": "[1.0.0, )",
+          "FreeTrain.Contracts": "[1.0.0, )",
+          "FreeTrain.Plugins.ManualController": "[1.0.0, )",
+          "FreeTrain.Session": "[1.0.0, )"
+        }
+      },
       "freetrain.session": {
         "type": "Project",
         "dependencies": {

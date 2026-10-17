@@ -19,7 +19,7 @@ Commands carry request ID and expected epoch; rename/controller/removal carry
 expected revision. `accepted` means committed and includes application sequence,
 tick, and revision. `rejected` carries a stable code and string arguments, to be
 localized at presentation. Deltas include base/new revision and explicit removal
-IDs. The fixture client refuses submissions rather than simulating acknowledgements.
+IDs. The live client waits for committed results and applies only matching-base deltas.
 
 The initial save contains explicit tracks, train/controller/next-move data,
 station/dwell data, buildings, clock, cash, random state, and ordered event
@@ -37,15 +37,24 @@ dotnet test FreeTrain.slnx -c Release
 Commit generated TypeScript alongside schema changes. C# records in Contracts
 and Persistence must round-trip the same fixtures without dropping/adding fields
 or changing numeric values. The C# JSON reader enforces required constructor
-arguments and disallows unmapped fields; domain invariants and complete
-schema/enum/range validation are future server/load boundary work. TypeScript
+arguments and disallows unmapped fields; the server additionally validates command kinds, counters and input at its boundary.
+Complete save validation remains Stage 6 work. TypeScript
 compile-time types alone do not validate messages from a server.
 
-Before networking, extend the schema with full track/scalar changes, input expiry,
-resync/reset/version-mismatch messages, and the concrete bootstrap/save HTTP
-contract. Specify dedup retention, disconnect grace, request/queue/output bounds,
-and compatibility identifiers while implementing Stage 4. No retry guarantee is
-implemented by the headless session API.
+Stage 4 implements bootstrap, operator-cookie exchange and an exclusive WebSocket
+with compatibility query checks. Deltas now include paused/cash values, track
+upserts and track-position removals. Resync requests obtain a fresh snapshot;
+heartbeats bound idle connections; input-reset messages clear held input and can
+request the single-player pause policy. All lifecycle mutations are drained by
+the host. Runtime browser validation uses this schema; server DTO validation and
+domain checks reject malformed messages and invalid/stale commands.
+
+The [network report](../../tmp/web-prototype-network.md) specifies endpoints,
+origin/access policy, message/queue limits, two-minute bounded in-memory receipts,
+resend restrictions, input expiry, disconnect grace and idle world retention.
+Request IDs are unique per participant/server incarnation. Reusing an ID with a
+different command is rejected; capacity exhaustion preserves existing receipts.
+No exactly-once guarantee survives restart or receipt expiry.
 
 Stage 2 snapshots now contain complete `tracks` (position, shape, revision) and
 train direction, ordered `carPositions`, and state (`moving`, `station`, `buffer`,

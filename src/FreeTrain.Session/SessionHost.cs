@@ -17,17 +17,26 @@ public sealed class SessionHost
     private readonly string ownerId;
     private readonly int queueCapacity;
     private long sequence;
+    private bool resetInput;
+    private bool safetyPause;
     public const int MaximumTicksPerPump = 256;
     public const int MaximumCommandsPerBoundary = 64;
-    public long WorldEpoch { get; } = 1;
+    public long WorldEpoch { get; }
 
-    public SessionHost(ScenarioDefinition scenario, string ownerId, IEnumerable<Func<ITrainController>> controllerFactories, int queueCapacity = 256)
+    public SessionHost(ScenarioDefinition scenario, string ownerId, IEnumerable<Func<ITrainController>> controllerFactories, int queueCapacity = 256, long worldEpoch = 1)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(ownerId);
         if (queueCapacity <= 0) throw new ArgumentOutOfRangeException(nameof(queueCapacity));
         this.ownerId = ownerId;
         this.queueCapacity = queueCapacity;
+        WorldEpoch = worldEpoch;
         world = new(scenario, controllerFactories.Select(factory => factory()));
+    }
+
+    // Bounded, coalesced lifecycle intent; only Pump mutates the world.
+    public void RequestInputReset(bool pause)
+    {
+        lock (gate) { resetInput = true; safetyPause |= pause; }
     }
 
     // Completion means committed/rejected by Pump, never merely queued.
@@ -66,6 +75,8 @@ public sealed class SessionHost
                     queued.Completion.SetResult(result);
                     applied++;
                 }
+                if (resetInput) { world.ClearInputs(); resetInput = false; }
+                if (safetyPause) { if (!world.Paused) world.SetPaused(true); safetyPause = false; }
                 if (advanced >= tickBudget || world.Paused) break;
                 events.AddRange(world.AdvanceOneTick());
                 advanced++;

@@ -8,6 +8,7 @@
     <ProjectReference Include="../../src/FreeTrain.Persistence/FreeTrain.Persistence.csproj" />
     <ProjectReference Include="../../src/FreeTrain.Content/FreeTrain.Content.csproj" />
     <ProjectReference Include="../../src/FreeTrain.Session/FreeTrain.Session.csproj" />
+    <ProjectReference Include="../../src/FreeTrain.Server/FreeTrain.Server.csproj" />
     <ProjectReference Include="../../src/FreeTrain.Plugins.ManualController/FreeTrain.Plugins.ManualController.csproj" />
     <None Include="../../prototype/protocol/fixtures/*.json" Link="Fixtures/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>

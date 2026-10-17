@@ -43,7 +43,14 @@ public sealed class DecimalInt64Converter : JsonConverter<long>
 [JsonDerivedType(typeof(AcceptedMessage), "accepted")]
 [JsonDerivedType(typeof(RejectedMessage), "rejected")]
 [JsonDerivedType(typeof(JoinMessage), "join")]
+[JsonDerivedType(typeof(ResyncMessage), "resync")]
+[JsonDerivedType(typeof(HeartbeatMessage), "heartbeat")]
+[JsonDerivedType(typeof(InputResetMessage), "inputReset")]
 public abstract record WireMessage;
+
+public sealed record ResyncMessage : WireMessage;
+public sealed record HeartbeatMessage : WireMessage;
+public sealed record InputResetMessage(bool Pause) : WireMessage;
 
 public sealed record JoinMessage(int ProtocolVersion, string ContentVersion, string ServerIncarnation,
     string SessionId, string ParticipantId, long WorldEpoch, [property: JsonConverter(typeof(NestedSnapshotConverter))] SnapshotMessage Snapshot) : WireMessage;
@@ -53,8 +60,9 @@ public sealed record RejectedMessage(string RequestId, string Code, Dictionary<s
 public sealed record SnapshotMessage(long WorldEpoch, long Revision, long Tick, bool Paused, long Cash,
     MapRead Map, TrainRead[] Trains, StationRead[] Stations, BuildingRead[] Buildings, TrackRead[] Tracks) : WireMessage;
 public sealed record DeltaMessage(long WorldEpoch, long BaseRevision, long Revision, long Tick,
-    TrainRead[] Trains, StationRead[] Stations, BuildingRead[] Buildings, RemovedRead Removed) : WireMessage;
-public sealed record RemovedRead(string[] TrainIds, string[] StationIds, string[] BuildingIds);
+    bool Paused, long Cash, TrainRead[] Trains, StationRead[] Stations, BuildingRead[] Buildings,
+    TrackRead[] Tracks, RemovedRead Removed) : WireMessage;
+public sealed record RemovedRead(string[] TrainIds, string[] StationIds, string[] BuildingIds, PositionRead[] TrackPositions);
 public sealed record MapRead(int Width, int Height, int Levels);
 public sealed record PositionRead(int X, int Y, int Z);
 public sealed record TrackRead(PositionRead Position, string Shape, long Revision);
