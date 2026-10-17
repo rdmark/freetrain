@@ -2,9 +2,11 @@
 
 The prototype now runs the deterministic reference game headlessly with an owning
 session queue, rail/train/station rules, construction accounting, and explicit
-manual-controller input. The bilingual browser remains a **static fixture**;
+manual-controller input. The bilingual browser is an **interactive UI fixture**;
 HTTP/WebSocket gameplay, map rendering, and working save/load arrive in later stages.
-See [the Stage 2 implementation and evidence](doc/web-prototype-headless.md).
+Svelte is the selected shell after the shared-fixture comparison with plain
+TypeScript. See [the Stage 2 implementation](tmp/web-prototype-headless.md) and
+[Stage 3 comparison report](tmp/web-prototype-ui-comparison.md).
 
 ## Prerequisites and checks
 
@@ -37,8 +39,9 @@ deno task install:browser
 deno task test:browser
 ```
 
-These tests run Chromium against the release static files and capture English
-and Japanese screenshots in `web/test-results/`. They do not establish the final
+These tests build the Svelte shell into `web/dist/`, run
+Chromium against those release static files, and capture English/Japanese
+screenshots in `web/test-results/`. They do not establish the final
 cross-platform browser matrix or native IME behavior.
 
 ## Local development
@@ -55,9 +58,13 @@ deno task --cwd web dev
 
 Open the Vite loopback URL printed in the second terminal. The server
 binds to `http://127.0.0.1:5080` by default; `GET /health` returns headless
-status. The fixture client does not contact it. `web/dist/` is the static
+status. The fixture client does not contact it. Its toolbar, controller selector
+and station form use simulated confirmations, with normal/delayed/rejected
+responses and reconnect available for review. Reload resets the fixture.
+`web/dist/` contains only the selected Svelte static
 deployment artifact; production serves it alongside the C# backend without a
-JavaScript server runtime.
+JavaScript server runtime. The plain TypeScript experiment has been removed;
+the comparison decision and historical measurements remain in the report.
 
 If using the workspace-local SDK installed during the first implementation,
 prepend `$PWD/.tools/dotnet` to `PATH`. `.tools/` is ignored and not required by
@@ -75,7 +82,7 @@ dotnet run --project src/FreeTrain.Server -c Release --no-build --no-restore -- 
 
 Append an output path to write full per-tick state/event NDJSON. The command
 prints counts and a SHA-256; the expected result and rule decisions are in
-[the headless extraction notes](doc/web-prototype-headless.md). The .NET test
+[the headless extraction notes](tmp/web-prototype-headless.md). The .NET test
 suite compares two complete 10,000-tick traces and checks movement legality,
 station timing, manual control, accounting atomicity and host isolation.
 
