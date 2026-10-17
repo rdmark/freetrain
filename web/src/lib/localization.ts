@@ -1,5 +1,14 @@
 export const messages = {
   en: {
+    cancel: 'Cancel', saves: 'Save and restore', saveSlot: 'Slot', checkpoint: 'Automatic checkpoint', emptySlot: 'empty',
+    saveGame: 'Save slot', loadGame: 'Load slot', downloadSave: 'Download save', uploadSave: 'Upload save',
+    loadHint: 'Loading replaces the current game and starts paused. Download a backup first if needed.',
+    replaceWorld: 'Replace the current game with this save?', confirmLoad: 'Confirm load',
+    saving: 'Waiting for save operation…', saved: 'Save completed', loaded: 'Game restored and paused',
+    invalidSave: 'Invalid or incompatible save. The current game was preserved.', saveTooLarge: 'Save exceeds the 1 MiB limit.',
+    missingSave: 'This slot is empty.', saveFailed: 'Save operation could not be confirmed. Check the connection and server storage.',
+    enableSound: 'Enable sound', disableSound: 'Disable sound', soundOn: 'Station sound on', soundOff: 'Sound off', soundFailed: 'Sound could not play. Try enabling it again.',
+
     mapTools: 'Map tools', inspectTool: 'Inspect / drive', buildTool: 'Build track', removeTool: 'Remove track',
     zoomIn: 'Zoom in', zoomOut: 'Zoom out', homeMap: 'Reset camera', findTrain: 'Find train',
     heightCut: 'Height cut', buildLevel: 'Track level', trackShape: 'Track shape',
@@ -44,6 +53,15 @@ export const messages = {
     selectedBuilding: 'Building details', variant: 'Variant', height: 'Height',
   },
   ja: {
+    cancel: 'キャンセル', saves: '保存と復元', saveSlot: 'スロット', checkpoint: '自動保存', emptySlot: '空',
+    saveGame: 'スロットに保存', loadGame: 'スロットを読込', downloadSave: '保存ファイルをダウンロード', uploadSave: '保存ファイルをアップロード',
+    loadHint: '読込は現在のゲームを置き換え、一時停止で開始します。必要なら先にバックアップを保存してください。',
+    replaceWorld: 'この保存データで現在のゲームを置き換えますか？', confirmLoad: '読込を確定',
+    saving: '保存操作の確認待ち…', saved: '保存しました', loaded: 'ゲームを復元し一時停止しました',
+    invalidSave: '無効または非対応の保存データです。現在のゲームは保持されました。', saveTooLarge: '保存データは1 MiBまでです。',
+    missingSave: 'このスロットは空です。', saveFailed: '保存操作を確認できません。接続とサーバーの保存先を確認してください。',
+    enableSound: '音を有効にする', disableSound: '音を無効にする', soundOn: '駅の音が有効です', soundOff: '音は無効です', soundFailed: '音を再生できませんでした。もう一度有効にしてください。',
+
     mapTools: 'マップ操作', inspectTool: '確認・運転', buildTool: '線路を敷設', removeTool: '線路を撤去',
     zoomIn: '拡大', zoomOut: '縮小', homeMap: '視点を戻す', findTrain: '列車を表示',
     heightCut: '高さ表示', buildLevel: '線路の高さ', trackShape: '線路の形',

@@ -5,11 +5,17 @@
   import { createShellModel } from './lib/shell-model.ts';
   import { authorize, createRemoteSessionClient } from './lib/remote-session-client.ts';
   import { catalog } from './lib/shell-model.ts';
+  import SaveControls from './SaveControls.svelte';
+  import { createBrowserAudio } from './lib/browser-audio.ts';
   import MapView from './MapView.svelte';
   import type { Selection } from './lib/map-renderer.ts';
 
-  const model = createShellModel(createRemoteSessionClient, initialLocale());
-  const dispose = () => model.dispose();
+  const audio = createBrowserAudio();
+  let soundEnabled = $state(false);
+  let soundFailed = $state(false);
+  let saveBusy = $state(false);
+  const model = createShellModel(() => createRemoteSessionClient((event, epoch) => { void audio.event(event, epoch).then(() => { soundEnabled = audio.enabled; }); }), initialLocale());
+  const dispose = () => { model.dispose(); audio.dispose(); };
   let secret = $state('');
   let accessFailed = $state(false);
   let view = $state(model.state);
@@ -19,7 +25,7 @@
   const mapObjectPosition = $derived(mapSelection?.kind === 'train'
     ? read?.trains.find(train => train.id === mapSelection?.id)?.position
     : mapSelection?.position);
-  const disabled = $derived(view.pending || view.connection !== 'ready');
+  const disabled = $derived(saveBusy || view.pending || view.connection !== 'ready');
   const selected = $derived(catalog.find(item => item.id === view.selectedBuilding)!);
   $effect(() => persistLocale(view.locale));
   onMount(() => {
@@ -52,11 +58,13 @@
     <span class="status-dot" data-testid="clock-state">{text[read?.paused === false ? 'running' : 'paused']}</span>
   </nav>
   <p class="command-feedback" role="status" aria-live="polite" aria-atomic="true">{text[view.feedback === 'idle' && view.connection === 'loading' ? 'loading' : view.feedback]}</p>
+  <div class="fixture-controls"><button onclick={async () => { if (soundEnabled) { audio.disable(); soundEnabled = false; } else { soundEnabled = await audio.enable(); soundFailed = !soundEnabled; } }}>{soundEnabled ? text.disableSound : text.enableSound}</button><span data-testid="sound-feedback">{soundFailed ? text.soundFailed : soundEnabled ? text.soundOn : text.soundOff}</span></div>
+  <SaveControls locale={view.locale} epoch={read?.worldEpoch} disabled={view.pending || view.connection !== 'ready'} onbusy={value => { saveBusy = value; }} />
   {#if read}
     <main>
       <section class="world-panel" aria-labelledby="world-title">
         <div class="panel-heading"><h2 id="world-title">{text.mapTitle}</h2><span>{text.mapSize}</span></div>
-        <MapView {model} {view} onselect={selection => {
+        <MapView {model} view={{ ...view, pending: view.pending || saveBusy }} onselect={selection => {
           mapSelection = selection;
           if (selection?.kind === 'building') {
             const building = read?.buildings.find(item => item.id === selection.id);

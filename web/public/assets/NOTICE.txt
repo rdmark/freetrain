@@ -15,3 +15,8 @@ Night variants use core/framework/graphics/ColorMap.cs palette rules.
 Tint variants are an authored red/green channel swap, not historical variants.
 Sources, hashes and alpha masks: web/src/generated/sprites.json.
 Reproduce: deno task --cwd web import:content (Python 3 standard library).
+
+station.wav: plugins/system/station.wav, copied without modification from main
+at 1f755ca; registered as the station sound in plugins/system/plugin.xml:304.
+FreeTrain copyright 2002 Kohsuke Kawaguchi et al., LGPL 2.1 or later.
+SHA-256: d65f1213bb9044b9f4e44af97cd1a59130ba4aee9e356eff8fd190c83dd2a168

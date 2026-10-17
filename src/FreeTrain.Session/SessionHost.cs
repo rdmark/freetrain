@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using FreeTrain.Contracts;
+using FreeTrain.Persistence;
 using FreeTrain.Simulation;
 
 namespace FreeTrain.Session;
@@ -10,10 +11,14 @@ public sealed record PumpResult(int AdvancedTicks, int AppliedCommands, Immutabl
 
 public sealed class SessionHost
 {
-    private sealed record Queued(ParticipantContext Participant, CommandMessage Command, TaskCompletionSource<WireMessage> Completion);
+    private abstract record Work;
+    private sealed record Boundary(Action Apply) : Work;
+    private sealed record Queued(ParticipantContext Participant, CommandMessage Command, TaskCompletionSource<WireMessage> Completion) : Work;
     private readonly object gate = new();
-    private readonly Queue<Queued> commands = new();
-    private readonly World world;
+    private readonly Queue<Work> commands = new();
+    private World world;
+    private readonly ScenarioDefinition scenario;
+    private readonly Func<ITrainController>[] controllerFactories;
     private readonly string ownerId;
     private readonly int queueCapacity;
     private long sequence;
@@ -21,17 +26,44 @@ public sealed class SessionHost
     private bool safetyPause;
     public const int MaximumTicksPerPump = 256;
     public const int MaximumCommandsPerBoundary = 64;
-    public long WorldEpoch { get; }
+    public long WorldEpoch { get; private set; }
 
     public SessionHost(ScenarioDefinition scenario, string ownerId, IEnumerable<Func<ITrainController>> controllerFactories, int queueCapacity = 256, long worldEpoch = 1)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(ownerId);
         if (queueCapacity <= 0) throw new ArgumentOutOfRangeException(nameof(queueCapacity));
+        this.scenario = scenario;
+        this.controllerFactories = controllerFactories.ToArray();
         this.ownerId = ownerId;
         this.queueCapacity = queueCapacity;
         WorldEpoch = worldEpoch;
-        world = new(scenario, controllerFactories.Select(factory => factory()));
+        world = new(scenario, this.controllerFactories.Select(factory => factory()));
     }
+
+    // Persistence joins exactly the same bounded FIFO as network commands.
+    private Task<T> AtBoundary<T>(Func<T> action)
+    {
+        lock (gate)
+        {
+            if (commands.Count >= queueCapacity) return Task.FromException<T>(new InvalidOperationException("queueFull"));
+            var completion = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
+            commands.Enqueue(new Boundary(() => { try { completion.SetResult(action()); } catch (Exception ex) { completion.SetException(ex); } }));
+            return completion.Task;
+        }
+    }
+    public Task<SaveDocument> CaptureSave(long? expectedEpoch = null) => AtBoundary(() =>
+    {
+        if (expectedEpoch != null && expectedEpoch != WorldEpoch) throw new InvalidOperationException("staleEpoch");
+        return SaveCodec.Capture(scenario, world.Read());
+    });
+    public Task<SnapshotMessage> LoadSave(SaveDocument save, long? expectedEpoch = null) => AtBoundary(() =>
+    {
+        if (expectedEpoch != null && expectedEpoch != WorldEpoch) throw new InvalidOperationException("staleEpoch");
+        var candidate = SaveCodec.Restore(save, scenario, controllerFactories.Select(factory => factory()));
+        candidate.SetPaused(true);
+        world = candidate; WorldEpoch++; sequence = 0; resetInput = false; safetyPause = false;
+        return Snapshot();
+    });
 
     // Bounded, coalesced lifecycle intent; only Pump mutates the world.
     public void RequestInputReset(bool pause)
@@ -48,7 +80,7 @@ public sealed class SessionHost
             if (string.IsNullOrWhiteSpace(command.RequestId)) return Task.FromResult<WireMessage>(Reject(command, "invalidInput"));
             if (commands.Count >= queueCapacity) return Task.FromResult<WireMessage>(Reject(command, "queueFull"));
             var completion = new TaskCompletionSource<WireMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
-            commands.Enqueue(new(participant, command, completion));
+            commands.Enqueue(new Queued(participant, command, completion));
             return completion.Task;
         }
     }
@@ -68,7 +100,15 @@ public sealed class SessionHost
                 var count = Math.Min(commands.Count, MaximumCommandsPerBoundary);
                 for (var i = 0; i < count && advanced < MaximumTicksPerPump; i++)
                 {
-                    var queued = commands.Dequeue();
+                    var work = commands.Dequeue();
+                    if (work is Boundary boundary)
+                    {
+                        var epoch = WorldEpoch;
+                        boundary.Apply();
+                        if (WorldEpoch != epoch) events.Clear(); // Never publish old-world effects under the new epoch.
+                        applied++; continue;
+                    }
+                    var queued = (Queued)work;
                     var before = world.Tick;
                     var result = Apply(queued, events);
                     advanced += (int)(world.Tick - before); // Explicit single-step commands also consume this pump's tick bound.

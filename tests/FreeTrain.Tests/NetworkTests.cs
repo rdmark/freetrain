@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using FreeTrain.Contracts;
 using FreeTrain.Server;
+using FreeTrain.Persistence;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -221,6 +222,42 @@ public class NetworkTests
         using var recovered = await server.ConnectEventually();
         Assert.Equal(0, Assert.IsType<JoinMessage>(await Read(recovered)).Snapshot.Tick);
     }
+    [Fact]
+    public async Task Real_http_save_transfer_slots_limits_and_load_resnapshot_are_authorized_and_atomic()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "freetrain-http-saves-" + Guid.NewGuid());
+        try
+        {
+            await using var server = await Harness.Start("save-secret", directory);
+            Assert.Equal(HttpStatusCode.Unauthorized, (await server.Http.GetAsync("/api/saves/download")).StatusCode);
+            Assert.Equal(HttpStatusCode.Unauthorized, (await server.Http.PostAsync("/api/saves/upload?expectedWorldEpoch=1", new StringContent("{}"))).StatusCode);
+            await server.Http.PostAsJsonAsync("/api/access", new { secret = "save-secret" });
+            await server.Bootstrap(); using var socket = await server.Connect(); await Read(socket);
+            var download = await server.Http.GetByteArrayAsync("/api/saves/download");
+            Assert.Equal(0, SaveCodec.Decode(download).World.Tick);
+            Assert.Equal(HttpStatusCode.OK, (await server.Http.PostAsync("/api/saves/slot1/save?expectedWorldEpoch=1", null)).StatusCode);
+            Assert.True(File.Exists(Path.Combine(directory, "slot1.json")));
+            Assert.Equal(HttpStatusCode.BadRequest, (await server.Http.PostAsync("/api/saves/unknown/save?expectedWorldEpoch=1", null)).StatusCode);
+            Assert.Equal(HttpStatusCode.NotFound, (await server.Http.PostAsync("/api/saves/slot3/load?expectedWorldEpoch=1", null)).StatusCode);
+            await Send(socket, Command("step-save", new StepCommand())); await Until(socket, m => m is AcceptedMessage);
+            var before = (await server.Bootstrap()).Snapshot;
+            var invalid = await server.Http.PostAsync("/api/saves/upload?expectedWorldEpoch=1", new StringContent("{}"));
+            Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
+            Assert.Equal(JsonSerializer.Serialize(before, NetworkSession.Json), JsonSerializer.Serialize((await server.Bootstrap()).Snapshot, NetworkSession.Json));
+            var huge = await server.Http.PostAsync("/api/saves/upload?expectedWorldEpoch=1", new ByteArrayContent(new byte[SaveCodec.MaximumBytes + 1]));
+            Assert.Equal(HttpStatusCode.RequestEntityTooLarge, huge.StatusCode);
+            Assert.Equal(HttpStatusCode.OK, (await server.Http.PostAsync("/api/saves/upload?expectedWorldEpoch=1", new ByteArrayContent(download))).StatusCode);
+            var snapshot = Assert.IsType<SnapshotMessage>(await Until(socket, m => m is SnapshotMessage));
+            Assert.Equal(2, snapshot.WorldEpoch); Assert.True(snapshot.Paused); Assert.Equal(0, snapshot.Tick);
+            Assert.Equal(HttpStatusCode.Conflict, (await server.Http.PostAsync("/api/saves/upload?expectedWorldEpoch=1", new ByteArrayContent(download))).StatusCode);
+            await Send(socket, Command("step-save", new StepCommand()));
+            Assert.Equal("staleEpoch", Assert.IsType<RejectedMessage>(await Until(socket, m => m is RejectedMessage)).Code);
+            Assert.Equal(HttpStatusCode.OK, (await server.Http.PostAsync("/api/saves/slot1/load?expectedWorldEpoch=2", null)).StatusCode);
+            Assert.Equal(3, (await server.Bootstrap()).WorldEpoch);
+        }
+        finally { Directory.Delete(directory, true); }
+    }
+
     private static Task Send(ClientWebSocket socket, WireMessage message) => socket.SendAsync(
         new ArraySegment<byte>(JsonSerializer.SerializeToUtf8Bytes<WireMessage>(message, NetworkSession.Json)), WebSocketMessageType.Text, true, CancellationToken.None);
     private static async Task<WireMessage> Read(ClientWebSocket socket)
@@ -246,12 +283,13 @@ public class NetworkTests
         public HttpClient Http => http;
         public CookieContainer Cookies => cookies;
         public Uri SocketUri => new(new Uri(http.BaseAddress!.ToString().Replace("http:", "ws:")), "/api/session?protocolVersion=1&contentVersion=prototype-content-1");
-        public static async Task<Harness> Start(string? secret = null)
+        public static async Task<Harness> Start(string? secret = null, string? saveDirectory = null)
         {
             var builder = WebApplication.CreateBuilder(); builder.WebHost.UseUrls("http://127.0.0.1:0");
             builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?> { ["FreeTrain:OperatorSecret"] = secret });
+            if (saveDirectory != null) builder.Services.AddSingleton(new SaveStorage(saveDirectory));
             builder.Services.AddSingleton(new NetworkOptions()); builder.Services.AddSingleton<NetworkSession>(); builder.Services.AddHostedService<SessionDriver>();
-            builder.WebHost.ConfigureKestrel(o => o.Limits.MaxRequestBodySize = NetworkEndpoints.MaximumMessageBytes);
+            builder.WebHost.ConfigureKestrel(o => o.Limits.MaxRequestBodySize = SaveCodec.MaximumBytes);
             var app = builder.Build(); app.MapNetwork(); await app.StartAsync();
             var cookies = new CookieContainer();
             return new(app, new(new HttpClientHandler { CookieContainer = cookies }) { BaseAddress = new(app.Urls.Single()) }, cookies);

@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using FreeTrain.Contracts;
+using FreeTrain.Persistence;
 
 namespace FreeTrain.Server;
 
@@ -14,6 +15,7 @@ public static class NetworkEndpoints
     public static void MapNetwork(this WebApplication app)
     {
         var session = app.Services.GetRequiredService<NetworkSession>();
+        app.Lifetime.ApplicationStopping.Register(session.PrepareShutdown);
         var secret = app.Configuration["FreeTrain:OperatorSecret"];
         if (string.IsNullOrEmpty(secret)) secret = null;
         var attempts = 0;
@@ -58,6 +60,45 @@ public static class NetworkEndpoints
             }
             return Results.Json<WireMessage>(session.Bootstrap(), NetworkSession.Json);
         });
+        // Save HTTP requests use the same trusted owner credential and host FIFO as socket commands.
+        app.MapGet("/api/saves", (HttpContext context) => Authorized(context)
+            ? Results.Ok(session.SaveSlots()) : Results.Unauthorized());
+        app.MapGet("/api/saves/download", async (HttpContext context) =>
+        {
+            if (!Authorized(context)) return Results.Unauthorized();
+            try { return Results.File(SaveCodec.Encode(await session.CaptureSave()), "application/json", "freetrain-save.json"); }
+            catch (InvalidOperationException) { return Results.Json(new { code = "queueFull" }, statusCode: 503); }
+        });
+        async Task<IResult> SaveOperation(HttpContext context, Func<long, Task> action)
+        {
+            if (!Authorized(context)) return Results.Unauthorized();
+            if (!long.TryParse(context.Request.Query["expectedWorldEpoch"], out var epoch) || epoch < 0)
+                return Results.BadRequest(new { code = "invalidInput" });
+            try { await action(epoch); return Results.Ok(new { status = "confirmed" }); }
+            catch (InvalidDataException ex) { return Results.Json(new { code = ex.Message == "saveTooLarge" ? "saveTooLarge" : "invalidSave" }, statusCode: ex.Message == "saveTooLarge" ? 413 : 400); }
+            catch (FileNotFoundException) { return Results.NotFound(new { code = "missingSave" }); }
+            catch (InvalidOperationException ex) { return Results.Json(new { code = ex.Message == "staleEpoch" ? "staleEpoch" : "queueFull" }, statusCode: 409); }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            { return Results.Json(new { code = "saveFailed" }, statusCode: 503); }
+        }
+        app.MapPost("/api/saves/upload", async Task<IResult> (HttpContext context) => await SaveOperation(context, async epoch =>
+        {
+            if (context.Request.ContentLength is > SaveCodec.MaximumBytes) throw new InvalidDataException("saveTooLarge");
+            using var buffer = new MemoryStream(); var chunk = new byte[8192]; int count;
+            while ((count = await context.Request.Body.ReadAsync(chunk, context.RequestAborted)) > 0)
+            {
+                if (buffer.Length + count > SaveCodec.MaximumBytes) throw new InvalidDataException("saveTooLarge");
+                buffer.Write(chunk, 0, count);
+            }
+            await session.LoadSave(SaveCodec.Decode(buffer.ToArray()), epoch);
+        }));
+        app.MapPost("/api/saves/{id}/save", (HttpContext context, string id) => SaveOperation(context, async epoch =>
+        {
+            if (session.Bootstrap().WorldEpoch != epoch) throw new InvalidOperationException("staleEpoch");
+            if (!SaveStorage.Slots.Contains(id)) throw new InvalidDataException("invalidSlot");
+            await session.Checkpoint(id, epoch);
+        }));
+        app.MapPost("/api/saves/{id}/load", (HttpContext context, string id) => SaveOperation(context, epoch => session.LoadSlot(id, epoch)));
         app.MapGet("/api/session", async (HttpContext context) =>
         {
             if (!Authorized(context)) { context.Response.StatusCode = 401; return; }

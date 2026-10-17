@@ -5,9 +5,11 @@ real HTTP/WebSocket transport and an authoritative C# session. Run/pause/step,
 controller changes and Japanese station rename use committed server state.
 Reconnect/refresh recover the current game. The Canvas map supports pan/zoom,
 height cuts, object picking, track previews and confirmed construction/removal,
-with focus-scoped manual keyboard control. Durable saves/checkpoints arrive in Stage 6.
+with focus-scoped manual keyboard control. Versioned saves, server checkpoints, browser
+download/upload and an optional station sound are available.
 
-See the [playable map report and asset provenance](tmp/web-prototype-map.md),
+See the [persistence/audio report and backup/restore instructions](tmp/web-prototype-persistence.md),
+[playable map report and asset provenance](tmp/web-prototype-map.md),
 [network slice report and protocol/limits](tmp/web-prototype-network.md),
 [Stage 2 implementation](tmp/web-prototype-headless.md), and
 [UI comparison decision](tmp/web-prototype-ui-comparison.md).
@@ -63,7 +65,7 @@ deno task --cwd web dev
 
 Open the Vite loopback URL printed in the second terminal. The server binds to
 `http://127.0.0.1:5080`; Vite proxies `/api` HTTP and WebSocket traffic to it.
-`GET /health` returns network-stage status. Commands and train positions now come
+`GET /health` reports persistence-stage health and any automatic-checkpoint error. Commands and train positions now come
 from the real headless game. The map renders imported pier/condo/FT train images
 and the catalog contains the fixed pier and condo heights 2–5.
 Only one operator socket can control the game at a time.
@@ -75,9 +77,10 @@ remain Stage 7. No secret belongs in frontend configuration. Optional explicit
 origins use `FreeTrain__AllowedOrigins__0`; lifecycle and queue settings use
 `FreeTrain__Network__<Property>`. See the network report for defaults and limits.
 
-The game clears held input on disconnect, pauses after one second, and retains an
-idle game in memory for five minutes before starting a fresh paused world with a
-new epoch. Restart also starts a fresh game; there are no durable saves yet.
+The game clears held input on disconnect and pauses/checkpoints after one second.
+Idle games retain their state. Restart restores the latest checkpoint, starts paused,
+and changes the server incarnation. Automatic checkpoints run every 30 seconds;
+an abrupt crash can lose changes since the most recent successful checkpoint.
 Uncertain command outcomes are shown after reconnect and are never replayed across
 connections. `web/dist/` contains the Svelte static artifact; production needs no
 Deno/Node frontend process.
@@ -116,6 +119,43 @@ These tasks use the Python standard library. Generated PNGs, night/recolor varia
 alpha masks, offsets and source hashes are included in source; browser image decode stays
 outside the paint loop. Asset notices ship in `web/public/assets/NOTICE.txt` and
 `COPYING.txt`. Build checks reject generated drift.
+
+## Saves and sound
+
+Use **Save slot** / **Load slot** for three server slots, or **Download save** /
+**Upload save** for an independent JSON backup. Loading asks for confirmation,
+validates the complete file, replaces the game under a new epoch, clears held input,
+and starts paused. Invalid/incompatible files preserve the current world. Uploads
+are limited to 1 MiB. This format does not import historical FreeTrain saves.
+
+The automatic checkpoint is separate from the three manual slots. The server
+writes it periodically, after disconnect/load, and on graceful shutdown. Saves
+use `data/saves` relative to the service working directory by default. Set an
+absolute directory for predictable local or persistent-volume storage:
+
+```sh
+FreeTrain__Saves__Directory="$PWD/data/saves" dotnet run --project src/FreeTrain.Server --no-launch-profile
+```
+
+`FreeTrain__Saves__Interval=00:00:30` configures the checkpoint interval
+(allowed range: one second to five minutes). Only one server can hold a save
+directory at a time. A corrupt checkpoint prevents startup and is left intact;
+restore an independent download/backup using the linked report's procedure.
+Health reports `checkpointError: "checkpointFailed"` if an automatic write fails.
+
+Click **Enable sound** to preview the bundled station WAV and enable sound for
+new station-arrival events. Reconnects, refreshes and loaded snapshots do not replay
+old events. **Disable sound** mutes it; refresh starts muted.
+
+After a Release build, run the real crash/restart/independent-backup check:
+
+```sh
+python3 scripts/check-save-recovery.py
+```
+
+This launches isolated local servers with temporary save directories and writes
+measurements into `tmp/web-prototype-save-measurements.json`. Linux persistent
+volumes, hosted HTTPS/WSS and the full browser matrix remain Stage 7.
 
 ## Headless scenario
 

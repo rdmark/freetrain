@@ -74,6 +74,23 @@ public sealed class World
         }
     }
 
+    // Persistence validates the complete candidate before the session swaps its world.
+    public static World Restore(ScenarioDefinition definition, IEnumerable<ITrainController> controllers, WorldState state)
+    {
+        var world = new World(definition, controllers);
+        world.clock.Restore(state.Tick, state.NextEventOrder, state.Pending);
+        world.Paused = state.Paused; world.Revision = state.Revision;
+        foreach (var track in state.Tracks) world.tracks[track.Position] = track;
+        foreach (var station in state.Stations) world.stations[station.Id] = station;
+        foreach (var saved in state.Trains)
+        {
+            var train = world.trains[saved.Id];
+            train.Revision = saved.Revision; train.Status = saved.Status; train.StationId = saved.StationId;
+            train.InputSequence = saved.InputSequence;
+        }
+        return world;
+    }
+
     public void SetPaused(bool value) { Paused = value; Revision++; }
     public void ClearInputs()
     {

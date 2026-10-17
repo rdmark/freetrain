@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Threading.Channels;
 using FreeTrain.Contracts;
 using FreeTrain.Session;
+using FreeTrain.Persistence;
 
 namespace FreeTrain.Server;
 
@@ -24,8 +25,55 @@ public sealed class NetworkOptions
 }
 
 // All transport state is bounded and guarded here. The host remains the sole world owner.
-public sealed class NetworkSession(NetworkOptions options)
+public sealed class NetworkSession
 {
+    private readonly NetworkOptions options;
+    private readonly SaveStorage? storage;
+    public NetworkSession(NetworkOptions options, SaveStorage? storage = null)
+    {
+        this.options = options; this.storage = storage;
+        if (storage?.Exists("checkpoint") == true)
+        {
+            var load = host.LoadSave(storage.Read("checkpoint")); host.Pump(); load.GetAwaiter().GetResult();
+        }
+    }
+    private bool disconnectCheckpoint;
+    public bool TakeCheckpointRequest() { lock (gate) { var requested = disconnectCheckpoint; disconnectCheckpoint = false; return requested; } }
+    public Task<SaveDocument> CaptureSave(long? epoch = null) { lock (gate) return host.CaptureSave(epoch); }
+    public async Task Checkpoint(string id = "checkpoint", long? epoch = null)
+    {
+        if (storage == null) return;
+        await storage.Write(id, await CaptureSave(epoch));
+    }
+    public async Task LoadSave(SaveDocument document, long epoch)
+    {
+        Task<SnapshotMessage> loaded;
+        lock (gate) loaded = host.LoadSave(document, epoch);
+        await loaded;
+        lock (gate)
+        {
+            lastInput = null; disconnectCheckpoint = true;
+            if (active != null) Publish(active);
+        }
+    }
+    public Task LoadSlot(string id, long epoch) => LoadSave(storage?.Read(id) ?? throw new InvalidOperationException("unavailable"), epoch);
+    public object[] SaveSlots() => SaveStorage.Slots.Select(id => (object)new { id, exists = storage?.Exists(id) == true }).ToArray();
+    public void PrepareShutdown()
+    {
+        lock (gate)
+        {
+            if (active != null) Disconnect(active, DateTimeOffset.UtcNow);
+            host.RequestInputReset(true); host.Pump();
+        }
+    }
+    // Shutdown has stopped the driver, so explicitly drain this final queued capture.
+    public async Task FinalCheckpoint()
+    {
+        if (storage == null) return;
+        Task<SaveDocument> capture;
+        lock (gate) { capture = host.CaptureSave(); host.Pump(); }
+        await storage.Write("checkpoint", await capture);
+    }
     public const string ContentVersion = "prototype-content-1";
     public static readonly JsonSerializerOptions Json = WireJson.CreateOptions();
     private sealed record Receipt(string Payload, DateTimeOffset Expires, Task<WireMessage> Result);
@@ -46,6 +94,7 @@ public sealed class NetworkSession(NetworkOptions options)
     private DateTimeOffset? disconnectedAt;
     private DateTimeOffset? lastInput;
     private long lastPublicationSlot;
+    private bool checkpointedDisconnect;
     public string Incarnation { get; } = Guid.NewGuid().ToString("N");
     public string AccessCookie { get; } = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
     public JoinMessage Bootstrap() { lock (gate) return Join(); }
@@ -59,7 +108,7 @@ public sealed class NetworkSession(NetworkOptions options)
             var join = Join();
             active.LastSnapshot = join.Snapshot;
             Write(active, join);
-            disconnectedAt = null;
+            disconnectedAt = null; checkpointedDisconnect = false;
             return active;
         }
     }
@@ -93,6 +142,7 @@ public sealed class NetworkSession(NetworkOptions options)
         {
             Task<WireMessage> Reject(string code) => Task.FromResult<WireMessage>(new RejectedMessage(command.RequestId, code, new()));
             if (active != peer) return Reject("notAuthorized");
+            if (command.ExpectedWorldEpoch != host.WorldEpoch) return Reject("staleEpoch");
             foreach (var key in receipts.Where(x => x.Value.Expires <= now && x.Value.Result.IsCompleted).Select(x => x.Key).ToArray()) receipts.Remove(key);
             var payload = JsonSerializer.Serialize<WireMessage>(command, Json);
             if (receipts.TryGetValue(command.RequestId, out var receipt))
@@ -140,18 +190,25 @@ public sealed class NetworkSession(NetworkOptions options)
             if (active != null && now - active.LastSeen >= options.SocketIdle) Disconnect(active, now);
             if (lastInput is { } inputAt && now - inputAt >= options.InputExpiry)
             { host.RequestInputReset(false); lastInput = null; }
-            if (disconnectedAt is { } lostAt && now - lostAt >= options.DisconnectGrace) host.RequestInputReset(true);
-            if (disconnectedAt is { } idleAt && now - idleAt >= options.IdleRetention)
+            if (disconnectedAt is { } lostAt && now - lostAt >= options.DisconnectGrace)
+            {
+                host.RequestInputReset(true);
+                if (!checkpointedDisconnect) { disconnectCheckpoint = true; checkpointedDisconnect = true; }
+            }
+            if (storage == null && disconnectedAt is { } idleAt && now - idleAt >= options.IdleRetention)
             {
                 host = SessionComposition.CreateReferenceHost(host.WorldEpoch + 1);
                 receipts.Clear(); disconnectedAt = now;
             }
-            host.Pump(1); // 20Hz, no unbounded catch-up after a stalled process.
+            var pump = host.Pump(1); // 20Hz, no unbounded catch-up after a stalled process.
             // Fixed 100ms slots avoid accumulating 50ms timer jitter into a slower rate.
             // Skip missed slots after a stall; never burst an unbounded catch-up batch.
             var slot = now.UtcTicks / TimeSpan.TicksPerMillisecond / 100;
             if (active != null && slot > lastPublicationSlot)
             { Publish(active); lastPublicationSlot = slot; }
+            if (active != null)
+                foreach (var sound in pump.Events.Where(e => e.Kind == "stationArrived"))
+                    Write(active, new SoundEventMessage($"{Incarnation}:{host.WorldEpoch}:{sound.Tick}:{sound.SubjectId}:{sound.Kind}", host.WorldEpoch, sound.Kind));
         }
     }
     private void Publish(Peer peer)
@@ -187,11 +244,50 @@ public sealed class NetworkSession(NetworkOptions options)
     }
 }
 
-public sealed class SessionDriver(NetworkSession session) : BackgroundService
+public sealed class CheckpointOptions
 {
+    public string Directory { get; init; } = "data/saves";
+    public TimeSpan Interval { get; init; } = TimeSpan.FromSeconds(30);
+}
+
+public sealed class SessionDriver(NetworkSession session, ILogger<SessionDriver> logger, CheckpointOptions? options = null) : BackgroundService
+{
+    private Task? checkpoint;
+    public string? CheckpointError { get; private set; }
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        var interval = options?.Interval ?? TimeSpan.FromSeconds(30);
+        var next = DateTimeOffset.UtcNow + interval;
         using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(50));
-        while (await timer.WaitForNextTickAsync(stoppingToken)) session.Tick(DateTimeOffset.UtcNow);
+        try
+        {
+            while (await timer.WaitForNextTickAsync(stoppingToken))
+            {
+                var now = DateTimeOffset.UtcNow;
+                session.Tick(now);
+                if (checkpoint?.IsCompleted == true)
+                {
+                    try { await checkpoint; CheckpointError = null; }
+                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
+                    { CheckpointError = "checkpointFailed"; logger.LogError(ex, "Checkpoint failed; current game remains in memory"); }
+                    checkpoint = null;
+                }
+                if (checkpoint == null && (now >= next || session.TakeCheckpointRequest()))
+                { checkpoint = session.Checkpoint(); next = now + interval; }
+            }
+        }
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { }
+    }
+    public override async Task StopAsync(CancellationToken cancellationToken)
+    {
+        await base.StopAsync(cancellationToken);
+        session.PrepareShutdown();
+        if (checkpoint != null)
+        {
+            try { await checkpoint; }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
+            { logger.LogError(ex, "Earlier checkpoint failed; attempting final shutdown checkpoint"); }
+        }
+        await session.FinalCheckpoint();
     }
 }

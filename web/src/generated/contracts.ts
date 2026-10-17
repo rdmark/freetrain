@@ -1,7 +1,8 @@
 /* Generated from prototype/protocol/schema.json. Run deno task generate:contracts. */
 
 export type PrototypeDocument = WireMessage | SaveDocument;
-export type WireMessage = Join | Command | Accepted | Rejected | Snapshot | Delta | Resync | Heartbeat | InputReset;
+export type WireMessage =
+  Join | Command | Accepted | Rejected | Snapshot | Delta | Resync | Heartbeat | InputReset | SoundEvent;
 export type Counter = string;
 export type Money = string;
 export type CommandPayload =
@@ -173,6 +174,12 @@ export interface InputReset {
   type: "inputReset";
   pause: boolean;
 }
+export interface SoundEvent {
+  type: "soundEvent";
+  eventId: string;
+  worldEpoch: Counter;
+  kind: "stationArrived";
+}
 export interface SaveDocument {
   saveVersion: 1;
   contentVersion: string;
@@ -189,25 +196,38 @@ export interface SavedWorld {
   stations: SavedStation[];
   buildings: SavedBuilding[];
   events: ScheduledEvent[];
+  map: Map;
+  terrain: "flat";
+  clockStart: string;
+  revision: Counter;
+  nextEventOrder: Counter;
 }
 export interface SavedTrack {
   position: Position;
   shape: "eastWest" | "northSouth" | "curveSE" | "curveSW" | "curveNE" | "curveNW" | "junctionE" | "buffer";
+  revision: Counter;
 }
 export interface SavedTrain {
   id: string;
   definitionId: string;
-  position: Position;
   direction: "north" | "south" | "east" | "west";
-  cars: number;
+  /**
+   * @minItems 1
+   */
+  cars: [Position, ...Position[]];
   controller: "automatic" | "manual";
   nextMoveTick: Counter;
+  name: string;
+  revision: Counter;
+  status: "moving" | "station" | "buffer" | "blocked";
+  stationId: string | null;
 }
 export interface SavedStation {
   id: string;
   name: string;
   position: Position;
   dwellTicks: number;
+  revision: Counter;
 }
 export interface SavedBuilding {
   id: string;
@@ -218,6 +238,6 @@ export interface SavedBuilding {
 export interface ScheduledEvent {
   dueTick: Counter;
   order: Counter;
-  kind: "moveTrain" | "releaseStation";
+  kind: "moveTrain";
   subjectId: string;
 }

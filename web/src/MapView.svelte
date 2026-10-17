@@ -87,7 +87,7 @@
   function zoom(factor:number){camera=zoomAt(camera,factor,{x:width/2,y:height/2},width,height);dirty=true;}
   function home(){camera={...project({x:22,y:16,z:0}),zoom:Math.min(1.5,Math.max(.5,width/850))};dirty=true;}
   function focusTrain(){const train=view.read?.trains[0];if(train){camera={...project(train.position),zoom:camera.zoom};dirty=true;canvas.focus();}}
-  $effect(()=>{if(view.read){if(epoch!==view.read.worldEpoch){epoch=view.read.worldEpoch;selection=undefined;preview=undefined;selectedPosition=undefined;tool='inspect';}renderer?.setRead(view.read);dirty=true;}if(view.connection!=='ready'){preview=undefined;selectedPosition=undefined;}if(view.connection!=='ready'||view.read?.trains[0].controller!=='manual')clearInput();});
+  $effect(()=>{if(view.read){if(epoch!==view.read.worldEpoch){epoch=view.read.worldEpoch;clearInput();selection=undefined;preview=undefined;selectedPosition=undefined;tool='inspect';}renderer?.setRead(view.read);dirty=true;}if(view.connection!=='ready'){preview=undefined;selectedPosition=undefined;}if(view.connection!=='ready'||view.read?.trains[0].controller!=='manual')clearInput();});
   $effect(()=>{void heightCut;void level;void night;void winter;void recolor;void selection;void preview;void shape;void tool;dirty=true;});
   onMount(()=>{
     let active=true, frame=0;

@@ -49,6 +49,7 @@ export function createShellModel(connect: () => SessionClient, locale: Locale, r
       try {
         client = connect();
         unsubscribe = client.subscribe(read => {
+          if (state.read && state.read.worldEpoch !== read.worldEpoch) dirty = false;
           update({ read, connection: 'ready', ...(!dirty ? { draft: read.stations[0]?.name ?? '' } : {}) });
         });
         unsubscribeStatus = client.subscribeStatus?.(connection => update({ connection,

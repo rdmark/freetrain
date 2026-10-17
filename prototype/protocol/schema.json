@@ -711,11 +711,15 @@
             "junctionE",
             "buffer"
           ]
+        },
+        "revision": {
+          "$ref": "#/$defs/Counter"
         }
       },
       "required": [
         "position",
-        "shape"
+        "shape",
+        "revision"
       ]
     },
     "SavedTrain": {
@@ -730,9 +734,6 @@
           "type": "string",
           "minLength": 1
         },
-        "position": {
-          "$ref": "#/$defs/Position"
-        },
         "direction": {
           "enum": [
             "north",
@@ -742,9 +743,11 @@
           ]
         },
         "cars": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 2147483647
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/Position"
+          }
         },
         "controller": {
           "enum": [
@@ -754,16 +757,40 @@
         },
         "nextMoveTick": {
           "$ref": "#/$defs/Counter"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "$ref": "#/$defs/Counter"
+        },
+        "status": {
+          "enum": [
+            "moving",
+            "station",
+            "buffer",
+            "blocked"
+          ]
+        },
+        "stationId": {
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "required": [
         "id",
         "definitionId",
-        "position",
         "direction",
         "cars",
         "controller",
-        "nextMoveTick"
+        "nextMoveTick",
+        "name",
+        "revision",
+        "status",
+        "stationId"
       ]
     },
     "SavedStation": {
@@ -785,13 +812,17 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 2147483647
+        },
+        "revision": {
+          "$ref": "#/$defs/Counter"
         }
       },
       "required": [
         "id",
         "name",
         "position",
-        "dwellTicks"
+        "dwellTicks",
+        "revision"
       ]
     },
     "SavedBuilding": {
@@ -833,10 +864,7 @@
           "$ref": "#/$defs/Counter"
         },
         "kind": {
-          "enum": [
-            "moveTrain",
-            "releaseStation"
-          ]
+          "const": "moveTrain"
         },
         "subjectId": {
           "type": "string",
@@ -895,6 +923,21 @@
           "items": {
             "$ref": "#/$defs/ScheduledEvent"
           }
+        },
+        "map": {
+          "$ref": "#/$defs/Map"
+        },
+        "terrain": {
+          "const": "flat"
+        },
+        "clockStart": {
+          "type": "string"
+        },
+        "revision": {
+          "$ref": "#/$defs/Counter"
+        },
+        "nextEventOrder": {
+          "$ref": "#/$defs/Counter"
         }
       },
       "required": [
@@ -906,7 +949,12 @@
         "trains",
         "stations",
         "buildings",
-        "events"
+        "events",
+        "map",
+        "terrain",
+        "clockStart",
+        "revision",
+        "nextEventOrder"
       ]
     },
     "SaveDocument": {
@@ -963,6 +1011,9 @@
         },
         {
           "$ref": "#/$defs/InputReset"
+        },
+        {
+          "$ref": "#/$defs/SoundEvent"
         }
       ]
     },
@@ -1033,6 +1084,31 @@
       "required": [
         "type",
         "pause"
+      ]
+    },
+    "SoundEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "soundEvent"
+        },
+        "eventId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "worldEpoch": {
+          "$ref": "#/$defs/Counter"
+        },
+        "kind": {
+          "const": "stationArrived"
+        }
+      },
+      "required": [
+        "type",
+        "eventId",
+        "worldEpoch",
+        "kind"
       ]
     }
   }

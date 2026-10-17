@@ -15,7 +15,7 @@ public class ContractTests
         var source = File.ReadAllText(path);
         var options = WireJson.CreateOptions();
         var serialized = Path.GetFileName(path).StartsWith("save-", StringComparison.Ordinal)
-            ? JsonSerializer.Serialize(JsonSerializer.Deserialize<SaveDocument>(source, options), options)
+            ? JsonSerializer.Serialize(JsonSerializer.Deserialize<SaveDocument>(source, SaveCodec.Json), SaveCodec.Json)
             : JsonSerializer.Serialize(JsonSerializer.Deserialize<WireMessage>(source, options), options);
         Assert.True(JsonNode.DeepEquals(JsonNode.Parse(source), JsonNode.Parse(serialized)), path);
     }

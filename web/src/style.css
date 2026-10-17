@@ -75,3 +75,8 @@ input { min-width: 0; width: 100%; padding: 10px; border: 1px solid #bacbbf; bor
 @media (max-width: 440px) { .world-canvas { height: 360px; } .map-tools, .map-options, .map-action { padding-inline: 10px; } }
 
 .world-panel { align-self: start; }
+.save-controls { margin: 12px 0 20px; }
+.save-controls h2 { margin-bottom: 6px; }
+.save-controls label { min-width: 0; max-width: 100%; }
+.save-controls input[type="file"] { max-width: 290px; }
+.save-controls [data-testid="save-feedback"] { min-height: 1em; font-size: 13px; }

@@ -46,8 +46,10 @@ public sealed class DecimalInt64Converter : JsonConverter<long>
 [JsonDerivedType(typeof(ResyncMessage), "resync")]
 [JsonDerivedType(typeof(HeartbeatMessage), "heartbeat")]
 [JsonDerivedType(typeof(InputResetMessage), "inputReset")]
+[JsonDerivedType(typeof(SoundEventMessage), "soundEvent")]
 public abstract record WireMessage;
 
+public sealed record SoundEventMessage(string EventId, long WorldEpoch, string Kind) : WireMessage;
 public sealed record ResyncMessage : WireMessage;
 public sealed record HeartbeatMessage : WireMessage;
 public sealed record InputResetMessage(bool Pause) : WireMessage;

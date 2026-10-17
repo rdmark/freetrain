@@ -1,4 +1,5 @@
 using FreeTrain.Server;
+using FreeTrain.Persistence;
 
 if (args.Length > 0 && args[0] == "--headless-trace")
     return HeadlessTrace.Run(args);
@@ -10,14 +11,20 @@ if (string.IsNullOrEmpty(builder.Configuration["urls"]))
 if (string.IsNullOrEmpty(builder.Configuration["FreeTrain:OperatorSecret"]) &&
     builder.Configuration["urls"]!.Split(';').Any(url => !Uri.TryCreate(url, UriKind.Absolute, out var uri) || !uri.IsLoopback))
     throw new InvalidOperationException("A non-loopback binding requires FreeTrain__OperatorSecret.");
-builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = NetworkEndpoints.MaximumMessageBytes);
+builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = SaveCodec.MaximumBytes);
 var networkOptions = builder.Configuration.GetSection("FreeTrain:Network").Get<NetworkOptions>() ?? new();
 networkOptions.Validate();
+var checkpointOptions = builder.Configuration.GetSection("FreeTrain:Saves").Get<CheckpointOptions>() ?? new();
+if (checkpointOptions.Interval < TimeSpan.FromSeconds(1) || checkpointOptions.Interval > TimeSpan.FromMinutes(5))
+    throw new InvalidOperationException("Checkpoint interval must be between one second and five minutes.");
+builder.Services.AddSingleton(checkpointOptions);
+builder.Services.AddSingleton(_ => new SaveStorage(checkpointOptions.Directory));
 builder.Services.AddSingleton(networkOptions);
 builder.Services.AddSingleton<NetworkSession>();
-builder.Services.AddHostedService<SessionDriver>();
+builder.Services.AddSingleton<SessionDriver>();
+builder.Services.AddHostedService(services => services.GetRequiredService<SessionDriver>());
 var app = builder.Build();
-app.MapGet("/health", () => Results.Ok(new { status = "ok", stage = "network", protocolVersion = 1 }));
+app.MapGet("/health", (SessionDriver driver) => Results.Ok(new { status = driver.CheckpointError == null ? "ok" : "degraded", stage = "persistence", protocolVersion = 1, checkpointError = driver.CheckpointError }));
 app.MapNetwork();
 app.Run();
 

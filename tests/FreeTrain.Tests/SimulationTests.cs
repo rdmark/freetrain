@@ -52,14 +52,14 @@ public class SimulationTests
         var host = Host();
         var expected = JsonNode.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Fixtures/snapshot.json")));
         Assert.True(JsonNode.DeepEquals(expected, JsonSerializer.SerializeToNode<WireMessage>(host.Snapshot(), WireJson.CreateOptions())));
-        var save = JsonSerializer.Deserialize<SaveDocument>(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Fixtures/save-reference.json")), WireJson.CreateOptions())!;
+        var save = JsonSerializer.Deserialize<SaveDocument>(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Fixtures/save-reference.json")), SaveCodec.Json)!;
         var state = host.ReadState();
         Assert.Equal(80, state.Tracks.Length);
         Assert.Equal(save.World.Tracks.Length, state.Tracks.Length);
         foreach (var track in save.World.Tracks)
         {
             var actual = Assert.Single(state.Tracks.Where(x => x.Position == new GridPosition(track.Position.X, track.Position.Y, track.Position.Z)));
-            Assert.Equal(track.Shape, actual.Shape.ToString(), ignoreCase: true);
+            Assert.Equal(track.Shape, actual.Shape);
         }
         Assert.Equal(new DateTime(2000, 4, 1, 8, 0, 0), state.Time);
         Assert.True(state.Paused);

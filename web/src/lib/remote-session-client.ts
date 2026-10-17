@@ -1,4 +1,4 @@
-import type { Accepted, Command, Join, Rejected } from '../generated/contracts.ts';
+import type { Accepted, Command, Join, Rejected, SoundEvent } from '../generated/contracts.ts';
 import type { ConnectionStatus, ReadState, SessionClient } from './session-client.ts';
 import { applyDelta, immutable, parseMessage } from './protocol.ts';
 
@@ -10,7 +10,7 @@ export async function authorize(secret: string): Promise<boolean> {
 // A retry is automatic only on the same open socket, with the same request ID,
 // within the server's advertised/documented two-minute in-memory receipt window.
 // Any connection loss ends pending operations as unresolved; they are never replayed.
-export function createRemoteSessionClient(): SessionClient {
+export function createRemoteSessionClient(onSound?: (event: SoundEvent, epoch: string) => void): SessionClient {
   const listeners = new Set<(read: ReadState) => void>();
   const statuses = new Set<(status: ConnectionStatus) => void>();
   const pending = new Map<string, { command: Command; resolve: (value: Accepted | Rejected) => void; reject: (error: Error) => void; timer: ReturnType<typeof setTimeout>; attempts: number }>();
@@ -75,7 +75,9 @@ export function createRemoteSessionClient(): SessionClient {
               break;
             case 'snapshot':
               if (!join) throw new Error('Snapshot before join');
-              clearTimeout(connectionTimer); resyncing = false; publish(message); setStatus('ready'); break;
+              clearTimeout(connectionTimer); resyncing = false;
+              if (read && read.worldEpoch !== message.worldEpoch) clearPending();
+              publish(message); setStatus('ready'); break;
             case 'delta': {
               if (resyncing) break;
               const next = read && applyDelta(read, message);
@@ -86,6 +88,9 @@ export function createRemoteSessionClient(): SessionClient {
               }
               break;
             }
+            case 'soundEvent':
+              if (read && status === 'ready') onSound?.(message, read.worldEpoch);
+              break;
             case 'accepted': case 'rejected': {
               const item = pending.get(message.requestId);
               if (!item) break;

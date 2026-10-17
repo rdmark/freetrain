@@ -21,6 +21,11 @@ public sealed class SimulationClock(DateTime start)
         queue.Enqueue(action, (action.DueTick, action.Order));
         return action;
     }
+    public void Restore(long tick, long order, IEnumerable<PendingAction> pending)
+    {
+        queue.Clear(); Tick = tick; nextOrder = order;
+        foreach (var action in pending) queue.Enqueue(action, (action.DueTick, action.Order));
+    }
     public ImmutableArray<PendingAction> Advance()
     {
         Tick++;
