@@ -1,4 +1,7 @@
 .DS_Store
+.vs/
+*.suo
+*.csproj.user
 .tools/
 **/node_modules/
 web/dist/
