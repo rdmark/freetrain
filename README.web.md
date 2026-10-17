@@ -9,6 +9,8 @@ with focus-scoped manual keyboard control. Versioned saves, server checkpoints, 
 download/upload and an optional station sound are available.
 
 See the [persistence/audio report and backup/restore instructions](tmp/web-prototype-persistence.md),
+[deployment/recovery runbook](doc/web-deployment.md),
+[release validation and performance findings](tmp/web-prototype-validation.md),
 [playable map report and asset provenance](tmp/web-prototype-map.md),
 [network slice report and protocol/limits](tmp/web-prototype-network.md),
 [Stage 2 implementation](tmp/web-prototype-headless.md), and
@@ -72,8 +74,8 @@ Only one operator socket can control the game at a time.
 
 For a remote binding, configure `FreeTrain__OperatorSecret` on the server. The
 browser exchanges the access key for an HttpOnly, SameSite cookie. Keep the static
-client and service behind one HTTPS origin; deployment and HTTPS/WSS verification
-remain Stage 7. No secret belongs in frontend configuration. Optional explicit
+client and service behind one HTTPS origin. The release container serves both;
+Caddy provides HTTPS/WSS. No secret belongs in frontend configuration. Optional explicit
 origins use `FreeTrain__AllowedOrigins__0`; lifecycle and queue settings use
 `FreeTrain__Network__<Property>`. See the network report for defaults and limits.
 
@@ -154,8 +156,29 @@ python3 scripts/check-save-recovery.py
 ```
 
 This launches isolated local servers with temporary save directories and writes
-measurements into `tmp/web-prototype-save-measurements.json`. Linux persistent
-volumes, hosted HTTPS/WSS and the full browser matrix remain Stage 7.
+measurements into `tmp/web-prototype-save-measurements.json`. Linux x64 volume
+recovery and local HTTPS/WSS are now validated under Docker emulation on macOS ARM.
+Public hosting remains pending; cross-browser testing is skipped at the owner's request.
+
+## Release deployment and profiling
+
+```sh
+./scripts/build-web-release.sh
+PLAYWRIGHT_BROWSERS_PATH=/tmp/freetrain-playwright deno task --cwd web test:deployment
+PLAYWRIGHT_BROWSERS_PATH=/tmp/freetrain-playwright deno task --cwd web profile
+```
+
+Release image/static archives and checksums go into `tmp/release/`. Deployment
+checks use a disposable Compose project, Linux x64 runtime, one HTTPS/WSS origin,
+and persistent test volumes. The [runbook](doc/web-deployment.md)
+covers configuration, local certificates, controlled public hosting, health,
+updates, shutdown and independent backup restoration. All plan/report Markdown
+and performance evidence live in `tmp/`.
+
+If a development server already uses browser-test ports, set
+`FREETRAIN_TEST_SERVER_PORT=5182 FREETRAIN_TEST_WEB_PORT=4182` when running
+`deno task --cwd web test:browser`. `FREETRAIN_API_TARGET` changes the Vite
+development/preview proxy target only; the production client uses its own origin.
 
 ## Headless scenario
 

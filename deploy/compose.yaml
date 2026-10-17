@@ -1,0 +1,55 @@
+services:
+  game:
+    image: ${FREETRAIN_IMAGE:-freetrain:prototype}
+    platform: linux/amd64
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    environment:
+      FreeTrain__OperatorSecret: ${FREETRAIN_OPERATOR_SECRET:?Set FREETRAIN_OPERATOR_SECRET}
+      FreeTrain__TrustedProxy: 172.30.70.3
+      FreeTrain__Saves__Interval: ${FREETRAIN_CHECKPOINT_INTERVAL:-00:00:30}
+    volumes:
+      - saves:/data/saves
+    networks:
+      game:
+        ipv4_address: 172.30.70.2
+    restart: unless-stopped
+    stop_grace_period: 20s
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 512m
+    cpus: 2
+  proxy:
+    image: caddy:2.11.2-alpine@sha256:834468128c7696cec0ceea6172f7d692daf645ae51983ca76e39da54a97c570d
+    platform: linux/amd64
+    environment:
+      FREETRAIN_SITE: ${FREETRAIN_SITE:-localhost}
+      FREETRAIN_TLS: ${FREETRAIN_TLS:-internal}
+      FREETRAIN_HTTPS_PORT: ${FREETRAIN_HTTPS_PORT:-8443}
+    ports:
+      - "${FREETRAIN_BIND:-127.0.0.1}:${FREETRAIN_HTTP_PORT:-8080}:80"
+      - "${FREETRAIN_BIND:-127.0.0.1}:${FREETRAIN_HTTPS_PORT:-8443}:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks:
+      game:
+        ipv4_address: 172.30.70.3
+    depends_on: [game]
+    restart: unless-stopped
+    mem_limit: 128m
+networks:
+  game:
+    ipam:
+      config:
+        - subnet: 172.30.70.0/28
+volumes:
+  saves:
+    name: ${FREETRAIN_SAVE_VOLUME:-${COMPOSE_PROJECT_NAME}_saves}
+  caddy-data:
+  caddy-config:

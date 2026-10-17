@@ -1,0 +1,10 @@
+{$FREETRAIN_SITE:localhost} {
+    tls {$FREETRAIN_TLS:internal}
+    encode zstd gzip
+    header X-Content-Type-Options nosniff
+    reverse_proxy game:8080
+}
+
+http://{$FREETRAIN_SITE:localhost} {
+    redir https://{$FREETRAIN_SITE:localhost}:{$FREETRAIN_HTTPS_PORT:8443}{uri} 308
+}

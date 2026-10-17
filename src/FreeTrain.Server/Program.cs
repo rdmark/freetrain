@@ -3,6 +3,8 @@ using FreeTrain.Persistence;
 
 if (args.Length > 0 && args[0] == "--headless-trace")
     return HeadlessTrace.Run(args);
+if (args.Length == 1 && args[0] == "--headless-profile")
+    return HeadlessProfile.Run();
 
 var builder = WebApplication.CreateBuilder(args);
 // Loopback only unless an explicit deployment URL is configured.
@@ -24,7 +26,8 @@ builder.Services.AddSingleton<NetworkSession>();
 builder.Services.AddSingleton<SessionDriver>();
 builder.Services.AddHostedService(services => services.GetRequiredService<SessionDriver>());
 var app = builder.Build();
-app.MapGet("/health", (SessionDriver driver) => Results.Ok(new { status = driver.CheckpointError == null ? "ok" : "degraded", stage = "persistence", protocolVersion = 1, checkpointError = driver.CheckpointError }));
+app.UseDeployment();
+app.MapGet("/health", (SessionDriver driver) => Results.Json(new { status = driver.CheckpointError == null ? "ok" : "degraded", stage = "deployment", protocolVersion = 1, checkpointError = driver.CheckpointError }, statusCode: driver.CheckpointError == null ? 200 : 503));
 app.MapNetwork();
 app.Run();
 

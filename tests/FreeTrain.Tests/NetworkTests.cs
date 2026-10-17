@@ -14,6 +14,29 @@ using Xunit;
 
 public class NetworkTests
 {
+    [Theory]
+    [InlineData(null, false)]
+    [InlineData("127.0.0.1", true)]
+    public async Task Only_explicitly_trusted_proxy_can_supply_https_for_origin_and_secure_cookie(string? trustedProxy, bool trusted)
+    {
+        await using var server = await Harness.Start("proxy-secret", trustedProxy: trustedProxy);
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/access")
+        { Content = JsonContent.Create(new { secret = "proxy-secret" }) };
+        request.Headers.Add("X-Forwarded-Proto", "https");
+        request.Headers.Add("Origin", server.Http.BaseAddress!.ToString().Replace("http:", "https:").TrimEnd('/'));
+        var response = await server.Http.SendAsync(request);
+        Assert.Equal(trusted ? HttpStatusCode.NoContent : HttpStatusCode.Forbidden, response.StatusCode);
+        if (trusted)
+        {
+            var cookie = response.Headers.GetValues("Set-Cookie").Single();
+            Assert.Contains("secure", cookie); Assert.Contains("httponly", cookie); Assert.Contains("samesite=strict", cookie);
+            using var foreign = new HttpRequestMessage(HttpMethod.Post, "/api/access")
+            { Content = JsonContent.Create(new { secret = "proxy-secret" }) };
+            foreign.Headers.Add("X-Forwarded-Proto", "https");
+            foreign.Headers.Add("Origin", "https://foreign.example");
+            Assert.Equal(HttpStatusCode.Forbidden, (await server.Http.SendAsync(foreign)).StatusCode);
+        }
+    }
     private static readonly DateTimeOffset Now = DateTimeOffset.UtcNow;
     private static CommandMessage Command(string id, CommandPayload payload, long epoch = 1) => new(id, epoch, payload);
     private static async Task<WireMessage> Apply(NetworkSession session, NetworkSession.Peer peer, CommandMessage command, DateTimeOffset? now = null)
@@ -244,7 +267,12 @@ public class NetworkTests
             var invalid = await server.Http.PostAsync("/api/saves/upload?expectedWorldEpoch=1", new StringContent("{}"));
             Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
             Assert.Equal(JsonSerializer.Serialize(before, NetworkSession.Json), JsonSerializer.Serialize((await server.Bootstrap()).Snapshot, NetworkSession.Json));
-            var huge = await server.Http.PostAsync("/api/saves/upload?expectedWorldEpoch=1", new ByteArrayContent(new byte[SaveCodec.MaximumBytes + 1]));
+            // Let the server reject declared length before the client writes the body.
+            // Otherwise the expected early 413 races HttpClient's in-flight upload/reset.
+            using var hugeRequest = new HttpRequestMessage(HttpMethod.Post, "/api/saves/upload?expectedWorldEpoch=1")
+            { Content = new ByteArrayContent(new byte[SaveCodec.MaximumBytes + 1]) };
+            hugeRequest.Headers.ExpectContinue = true;
+            var huge = await server.Http.SendAsync(hugeRequest);
             Assert.Equal(HttpStatusCode.RequestEntityTooLarge, huge.StatusCode);
             Assert.Equal(HttpStatusCode.OK, (await server.Http.PostAsync("/api/saves/upload?expectedWorldEpoch=1", new ByteArrayContent(download))).StatusCode);
             var snapshot = Assert.IsType<SnapshotMessage>(await Until(socket, m => m is SnapshotMessage));
@@ -283,14 +311,14 @@ public class NetworkTests
         public HttpClient Http => http;
         public CookieContainer Cookies => cookies;
         public Uri SocketUri => new(new Uri(http.BaseAddress!.ToString().Replace("http:", "ws:")), "/api/session?protocolVersion=1&contentVersion=prototype-content-1");
-        public static async Task<Harness> Start(string? secret = null, string? saveDirectory = null)
+        public static async Task<Harness> Start(string? secret = null, string? saveDirectory = null, string? trustedProxy = null)
         {
             var builder = WebApplication.CreateBuilder(); builder.WebHost.UseUrls("http://127.0.0.1:0");
-            builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?> { ["FreeTrain:OperatorSecret"] = secret });
+            builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?> { ["FreeTrain:OperatorSecret"] = secret, ["FreeTrain:TrustedProxy"] = trustedProxy });
             if (saveDirectory != null) builder.Services.AddSingleton(new SaveStorage(saveDirectory));
             builder.Services.AddSingleton(new NetworkOptions()); builder.Services.AddSingleton<NetworkSession>(); builder.Services.AddHostedService<SessionDriver>();
             builder.WebHost.ConfigureKestrel(o => o.Limits.MaxRequestBodySize = SaveCodec.MaximumBytes);
-            var app = builder.Build(); app.MapNetwork(); await app.StartAsync();
+            var app = builder.Build(); app.UseDeployment(); app.MapNetwork(); await app.StartAsync();
             var cookies = new CookieContainer();
             return new(app, new(new HttpClientHandler { CookieContainer = cookies }) { BaseAddress = new(app.Urls.Single()) }, cookies);
         }
