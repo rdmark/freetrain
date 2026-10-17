@@ -20,9 +20,11 @@
     "preview": "deno run -A npm:vite@8.3.4 preview --host 127.0.0.1",
     "generate:contracts": "deno run -A scripts/generate-contracts.mjs",
     "check:generated": "deno run -A scripts/generate-contracts.mjs --check",
-    "check": "deno task check:generated && deno run -A npm:svelte-check@4.7.7 --tsconfig ./tsconfig.json",
-    "test": "deno test -A --no-check tests/contracts.test.mjs tests/shell-model.test.ts tests/remote-client.test.ts",
+    "check": "deno task check:generated && deno task check:content && deno run -A npm:svelte-check@4.7.7 --tsconfig ./tsconfig.json",
+    "test": "deno test -A --no-check tests/contracts.test.mjs tests/shell-model.test.ts tests/remote-client.test.ts tests/map.test.ts",
     "install:browser": "deno run -A npm:@playwright/test@1.64.1 install chromium",
-    "test:browser": "deno task build && deno run -A npm:@playwright/test@1.64.1 test"
+    "test:browser": "deno task build && deno run -A npm:@playwright/test@1.64.1 test",
+    "import:content": "deno run --allow-run=python3 scripts/import-content.ts",
+    "check:content": "deno run --allow-run=python3 scripts/import-content.ts --check"
   }
 }

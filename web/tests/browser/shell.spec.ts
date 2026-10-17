@@ -51,7 +51,7 @@ test('delayed real result preserves drafts, composition, focus and catalog scrol
     await page.goto('/'); await ready(page);
     const before = await page.getByTestId('tick').textContent();
     const catalog = page.getByRole('list', { name: 'Building catalog' });
-    await expect(catalog.getByRole('button')).toHaveCount(40);
+    await expect(catalog.getByRole('button')).toHaveCount(5);
     await catalog.getByRole('button').last().focus(); await page.keyboard.press('Enter');
     const scroll = await catalog.evaluate(el => el.scrollTop);
     await step(page).click();
@@ -134,7 +134,7 @@ test('Japanese labels fit narrow doubled-density layouts and hidden tab pauses g
   const page = await context.newPage(); await page.goto('/');
   await expect(page.getByTestId('connection')).toHaveText('ゲームに接続済み');
   for (const width of [720, 640, 360]) { await page.setViewportSize({ width, height: 900 }); expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true); }
-  await page.getByRole('button', { name: '運転', exact: false }).click();
+  await page.getByRole('navigation').getByRole('button', { name: '運転', exact: false }).click();
   await expect(page.getByTestId('clock-state')).toHaveText('運転中');
   await page.evaluate(() => { Object.defineProperty(document, 'hidden', { configurable: true, value: true }); document.dispatchEvent(new Event('visibilitychange')); });
   await expect(page.getByTestId('clock-state')).toHaveText('一時停止中');

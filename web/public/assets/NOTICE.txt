@@ -1,0 +1,17 @@
+FreeTrain representative sprite assets
+
+Source baseline: main at 1f755ca, in the accompanying source repository.
+FreeTrain copyright 2002 Kohsuke Kawaguchi et al., LGPL 2.1 or later.
+See COPYING.txt in this directory and the original source notices.
+
+pier*: Hiro Ayase, plugins/org.kohsuke.freetrain.structure.ayase/minato2.bmp
+condo*: Miha, plugins/org.kohsuke.freetrain.structure.miha/mansyon.bmp
+train*: Standard Train Kit, plugin author C477; FT train author Kohsuke Kawaguchi,
+  plugins/org.kohsuke.freetrain.trains/Train.bmp
+fence*, slope*: FreeTrain core/res/ConstructionFence.bmp and ugslope.bmp
+
+Converted to cropped RGBA PNG with upper-left color-key alpha and source offsets.
+Night variants use core/framework/graphics/ColorMap.cs palette rules.
+Tint variants are an authored red/green channel swap, not historical variants.
+Sources, hashes and alpha masks: web/src/generated/sprites.json.
+Reproduce: deno task --cwd web import:content (Python 3 standard library).

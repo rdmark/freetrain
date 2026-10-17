@@ -48,13 +48,13 @@ Deno.test('incoming snapshots preserve dirty draft, IME composition and catalog 
   const { service, model } = setup();
   try {
     await until(() => model.state.connection === 'ready');
-    model.setDraft('編集中'); model.setComposing(true); model.selectBuilding('catalog-40');
+    model.setDraft('編集中'); model.setComposing(true); model.selectBuilding('catalog-5');
     const next = structuredClone(model.state.read) as Snapshot;
     next.stations[0].name = '別の駅'; next.stations[0].revision = '1';
     next.trains[0].name = 'Updated train'; service.publish(next);
     await model.rename();
     assert(model.state.draft === '編集中' && model.state.composing && !model.state.pending);
-    assert(model.state.selectedBuilding === 'catalog-40' && model.state.read?.trains[0].name === 'Updated train');
+    assert(model.state.selectedBuilding === 'catalog-5' && model.state.read?.trains[0].name === 'Updated train');
     model.setComposing(false); model.resetDraft();
     assert(model.state.draft === '別の駅');
   } finally { model.dispose(); }

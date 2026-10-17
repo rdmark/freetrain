@@ -59,3 +59,19 @@ input { min-width: 0; width: 100%; padding: 10px; border: 1px solid #bacbbf; bor
 .catalog small { color: #78867b; font-size: 11px; display: block; margin-top: 4px; }
 @media (max-width: 850px) { .app-shell { padding: 18px; } main { grid-template-columns: 1fr; } aside { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); } .panel-heading { flex-wrap: wrap; } .map-placeholder { min-height: 300px; } }
 @media (max-width: 440px) { header { flex-wrap: wrap; } .toolbar { flex-wrap: wrap; } }
+.world-canvas { display: block; width: 100%; height: 470px; background: #b5c9a6; touch-action: none; cursor: crosshair; }
+.world-canvas:focus-visible { outline-offset: -4px; }
+.map-tools, .map-options, .map-action { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 16px; }
+.map-tools button { font-size: 12px; padding: 6px 10px; }
+.map-tools button[aria-pressed="true"] { background: #245e50; color: white; border-color: #245e50; }
+.map-options { background: #f4f6f0; font-size: 12px; }
+.map-options label { display: flex; align-items: center; gap: 6px; }
+.map-options input[type="checkbox"] { width: 16px; }
+.map-options input[type="range"] { width: 90px; padding: 0; }
+.map-options select { max-width: 155px; font-size: 12px; }
+.map-help { padding: 0 16px; font-size: 12px; line-height: 1.5; color: #63756c; }
+.map-action { min-height: 50px; font-size: 12px; }
+.building-icon { object-fit: contain; image-rendering: pixelated; }
+@media (max-width: 440px) { .world-canvas { height: 360px; } .map-tools, .map-options, .map-action { padding-inline: 10px; } }
+
+.world-panel { align-self: start; }

@@ -3,10 +3,12 @@
 The bilingual Svelte browser now drives the deterministic reference game through
 real HTTP/WebSocket transport and an authoritative C# session. Run/pause/step,
 controller changes and Japanese station rename use committed server state.
-Reconnect/refresh recover the current game. Map rendering and construction tools
-arrive in Stage 5; durable saves/checkpoints arrive in Stage 6.
+Reconnect/refresh recover the current game. The Canvas map supports pan/zoom,
+height cuts, object picking, track previews and confirmed construction/removal,
+with focus-scoped manual keyboard control. Durable saves/checkpoints arrive in Stage 6.
 
-See the [network slice report and protocol/limits](tmp/web-prototype-network.md),
+See the [playable map report and asset provenance](tmp/web-prototype-map.md),
+[network slice report and protocol/limits](tmp/web-prototype-network.md),
 [Stage 2 implementation](tmp/web-prototype-headless.md), and
 [UI comparison decision](tmp/web-prototype-ui-comparison.md).
 
@@ -18,7 +20,8 @@ Install the exact .NET SDK in `global.json` (10.0.402) and Deno in
 [Deno installation guide](https://docs.deno.com/runtime/getting_started/installation/).
 
 Frontend dependencies and tasks are defined in `web/deno.json`; `web/deno.lock`
-pins transitive versions and integrity hashes.
+pins transitive versions and integrity hashes. Python 3 (standard library only)
+is also required to reproduce/check the curated legacy sprite conversion.
 
 The solution to build is `FreeTrain.slnx`.
 
@@ -61,7 +64,8 @@ deno task --cwd web dev
 Open the Vite loopback URL printed in the second terminal. The server binds to
 `http://127.0.0.1:5080`; Vite proxies `/api` HTTP and WebSocket traffic to it.
 `GET /health` returns network-stage status. Commands and train positions now come
-from the real headless game. The map and building catalog remain placeholders.
+from the real headless game. The map renders imported pier/condo/FT train images
+and the catalog contains the fixed pier and condo heights 2–5.
 Only one operator socket can control the game at a time.
 
 For a remote binding, configure `FreeTrain__OperatorSecret` on the server. The
@@ -83,6 +87,35 @@ prepend `$PWD/.tools/dotnet` to `PATH`. `.tools/` is ignored and not required by
 the source. In a restricted execution environment, set `DOTNET_CLI_HOME` to a
 writable temporary directory; .NET build/test and local web servers also need
 permission to create local sockets.
+
+## Playing the map
+
+Click an object to inspect, drag the map to pan, and use the wheel or zoom buttons.
+Height cut hides raised rails and replaces cut buildings with selectable footprints.
+Night uses the source palette transformation; winter ground and recoloring are
+local display options. The water/fence/slope sample by the pier is decorative.
+
+Choose Build track to pause, select a tile on level 1, then confirm. Extend the
+siding with a buffer at `(37,16,1)`; the host converts the old buffer and charges
+200 total. Preview/cancel costs nothing. Removal has no refund and rejects occupied
+or station track. Leaving a construction tool keeps the game paused.
+
+Select Manual in the train inspector, run, and focus the map. Shift passes the
+station, Up departs, Down reverses at a station, and Left/Right choose a junction.
+Focus loss, hidden tabs, disconnect and server expiry clear held input. Text fields
+and IME composition do not capture controller keys.
+
+Reproduce/check bundled sprites:
+
+```sh
+deno task --cwd web import:content
+deno task --cwd web check:content
+```
+
+These tasks use the Python standard library. Generated PNGs, night/recolor variants,
+alpha masks, offsets and source hashes are included in source; browser image decode stays
+outside the paint loop. Asset notices ship in `web/public/assets/NOTICE.txt` and
+`COPYING.txt`. Build checks reject generated drift.
 
 ## Headless scenario
 

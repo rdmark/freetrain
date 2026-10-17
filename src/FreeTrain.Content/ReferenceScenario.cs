@@ -3,7 +3,7 @@ using FreeTrain.Simulation;
 
 namespace FreeTrain.Content;
 
-// Typed, curated metadata only. Legacy XML/image importing belongs to Stage 5.
+// Typed scenario metadata; curated browser XML/image import: scripts/import-web-content.py.
 public static class ReferenceScenario
 {
     public const string PierId = "{B32B765C-C74C-4BD9-84C6-E75A3E6DFC27}";

@@ -5,14 +5,20 @@
   import { createShellModel } from './lib/shell-model.ts';
   import { authorize, createRemoteSessionClient } from './lib/remote-session-client.ts';
   import { catalog } from './lib/shell-model.ts';
+  import MapView from './MapView.svelte';
+  import type { Selection } from './lib/map-renderer.ts';
 
   const model = createShellModel(createRemoteSessionClient, initialLocale());
   const dispose = () => model.dispose();
   let secret = $state('');
   let accessFailed = $state(false);
   let view = $state(model.state);
+  let mapSelection = $state<Selection>();
   const text = $derived(messages[view.locale]);
   const read = $derived(view.read);
+  const mapObjectPosition = $derived(mapSelection?.kind === 'train'
+    ? read?.trains.find(train => train.id === mapSelection?.id)?.position
+    : mapSelection?.position);
   const disabled = $derived(view.pending || view.connection !== 'ready');
   const selected = $derived(catalog.find(item => item.id === view.selectedBuilding)!);
   $effect(() => persistLocale(view.locale));
@@ -50,7 +56,15 @@
     <main>
       <section class="world-panel" aria-labelledby="world-title">
         <div class="panel-heading"><h2 id="world-title">{text.mapTitle}</h2><span>{text.mapSize}</span></div>
-        <div class="map-placeholder"><div class="map-label"><span aria-hidden="true">◇</span><h3>{text.mapPending}</h3><p>{text.scenario}</p></div></div>
+        <MapView {model} {view} onselect={selection => {
+          mapSelection = selection;
+          if (selection?.kind === 'building') {
+            const building = read?.buildings.find(item => item.id === selection.id);
+            const entry = catalog.find(item => item.height === building?.height);
+            if (entry) model.selectBuilding(entry.id);
+          }
+        }} />
+        {#if mapSelection && mapObjectPosition}<p class="map-help" data-testid="selected-object">{text[mapSelection.kind]} · {mapSelection.id} · {mapObjectPosition.x}, {mapObjectPosition.y}, {mapObjectPosition.z}</p>{/if}
         <dl class="world-stats"><div><dt>{text.cash}</dt><dd>{new Intl.NumberFormat(view.locale).format(BigInt(read.cash))}</dd></div><div><dt>{text.tick}</dt><dd data-testid="tick">{new Intl.NumberFormat(view.locale).format(BigInt(read.tick))}</dd></div></dl>
       </section>
       <aside>
@@ -62,7 +76,7 @@
           </form>
         </section>
         <section class="card" aria-labelledby="catalog-title"><h2 id="catalog-title">{text.buildings}</h2><p class="hint">{text.catalogHint}</p><ul class="catalog" aria-label={text.buildings}>
-          {#each catalog as item (item.id)}<li><button type="button" aria-pressed={selected.id === item.id} onclick={() => model.selectBuilding(item.id)}><span class="building-icon" aria-hidden="true">{item.family === 'pier' ? '▥' : '▤'}</span><span><strong>{text[item.family]} {item.variant}</strong><small>{text[item.family === 'pier' ? 'fixed' : 'variable']} · {item.height}</small></span></button></li>{/each}
+          {#each catalog as item (item.id)}<li><button type="button" aria-pressed={selected.id === item.id} onclick={() => model.selectBuilding(item.id)}><img class="building-icon" src={item.family === 'pier' ? '/assets/pier.png' : '/assets/condo-top.png'} alt="" /><span><strong>{text[item.family]} {item.variant}</strong><small>{text[item.family === 'pier' ? 'fixed' : 'variable']} · {item.height}</small></span></button></li>{/each}
         </ul></section>
         <section class="card" aria-labelledby="building-title"><h2 id="building-title">{text.selectedBuilding}</h2><dl class="details"><div><dt>{text.variant}</dt><dd data-testid="building-name">{text[selected.family]} {selected.variant}</dd></div><div><dt>{text.height}</dt><dd>{selected.height}</dd></div></dl></section>
       </aside>
