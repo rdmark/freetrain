@@ -1,0 +1,14 @@
+{
+  "scenario": "reference-v1",
+  "ticks": 10000,
+  "arrivals": 132,
+  "departures": 132,
+  "junctions": 132,
+  "moves": 9472,
+  "sha256": "828a860593d74b26d4417410b802f72f4f383535252571901a253deb7575ffe0",
+  "encoding": "UTF-8 full diagnostic state/event frame JSON followed by LF, once per tick",
+  "sdk": "10.0.402",
+  "runtime": "10.0.13",
+  "platform": "macOS arm64",
+  "date": "2026-10-17"
+}

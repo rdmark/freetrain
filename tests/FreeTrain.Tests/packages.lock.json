@@ -87,12 +87,32 @@
           "xunit.extensibility.core": "[2.9.3]"
         }
       },
+      "freetrain.content": {
+        "type": "Project",
+        "dependencies": {
+          "FreeTrain.Simulation": "[1.0.0, )"
+        }
+      },
       "freetrain.contracts": {
         "type": "Project"
       },
       "freetrain.persistence": {
         "type": "Project",
         "dependencies": {
+          "FreeTrain.Simulation": "[1.0.0, )"
+        }
+      },
+      "freetrain.plugins.manualcontroller": {
+        "type": "Project",
+        "dependencies": {
+          "FreeTrain.Simulation": "[1.0.0, )"
+        }
+      },
+      "freetrain.session": {
+        "type": "Project",
+        "dependencies": {
+          "FreeTrain.Contracts": "[1.0.0, )",
+          "FreeTrain.Persistence": "[1.0.0, )",
           "FreeTrain.Simulation": "[1.0.0, )"
         }
       },

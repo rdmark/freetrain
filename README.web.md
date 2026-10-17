@@ -1,8 +1,10 @@
 # FreeTrain Web
 
-The prototype currently provides builds, contracts, a scenario specification, and a bilingual
-**static fixture**. The server exposes `/health` only. There is no simulation,
-HTTP/WebSocket gameplay, map renderer, or working save/load yet.
+The prototype now runs the deterministic reference game headlessly with an owning
+session queue, rail/train/station rules, construction accounting, and explicit
+manual-controller input. The bilingual browser remains a **static fixture**;
+HTTP/WebSocket gameplay, map rendering, and working save/load arrive in later stages.
+See [the Stage 2 implementation and evidence](doc/web-prototype-headless.md).
 
 ## Prerequisites and checks
 
@@ -51,8 +53,8 @@ dotnet run --project src/FreeTrain.Server --no-launch-profile
 deno task --cwd web dev
 ```
 
-Open the Vite loopback URL printed in the second terminal. The foundation server
-binds to `http://127.0.0.1:5080` by default; `GET /health` returns foundation
+Open the Vite loopback URL printed in the second terminal. The server
+binds to `http://127.0.0.1:5080` by default; `GET /health` returns headless
 status. The fixture client does not contact it. `web/dist/` is the static
 deployment artifact; production serves it alongside the C# backend without a
 JavaScript server runtime.
@@ -62,6 +64,20 @@ prepend `$PWD/.tools/dotnet` to `PATH`. `.tools/` is ignored and not required by
 the source. In a restricted execution environment, set `DOTNET_CLI_HOME` to a
 writable temporary directory; .NET build/test and local web servers also need
 permission to create local sockets.
+
+## Headless scenario
+
+Run the 10,000-tick reference scenario without starting an HTTP listener:
+
+```sh
+dotnet run --project src/FreeTrain.Server -c Release --no-build --no-restore -- --headless-trace 10000
+```
+
+Append an output path to write full per-tick state/event NDJSON. The command
+prints counts and a SHA-256; the expected result and rule decisions are in
+[the headless extraction notes](doc/web-prototype-headless.md). The .NET test
+suite compares two complete 10,000-tick traces and checks movement legality,
+station timing, manual control, accounting atomicity and host isolation.
 
 ## Contract changes
 

@@ -69,6 +69,7 @@ export interface Snapshot {
   trains: Train[];
   stations: Station[];
   buildings: Building[];
+  tracks: Track[];
 }
 export interface Map {
   width: number;
@@ -82,6 +83,12 @@ export interface Train {
   position: Position;
   cars: number;
   controller: "automatic" | "manual";
+  direction: "north" | "east" | "south" | "west";
+  /**
+   * @minItems 1
+   */
+  carPositions: [Position, ...Position[]];
+  state: "moving" | "station" | "buffer" | "blocked";
 }
 export interface Position {
   x: number;
@@ -99,6 +106,11 @@ export interface Building {
   definitionId: string;
   position: Position;
   height: number;
+}
+export interface Track {
+  position: Position;
+  shape: "eastWest" | "northSouth" | "curveSE" | "curveSW" | "curveNE" | "curveNW" | "junctionE" | "buffer";
+  revision: Counter;
 }
 export interface Command {
   type: "command";

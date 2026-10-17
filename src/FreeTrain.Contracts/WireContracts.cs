@@ -51,13 +51,15 @@ public sealed record CommandMessage(string RequestId, long ExpectedWorldEpoch, C
 public sealed record AcceptedMessage(string RequestId, long WorldEpoch, long Sequence, long Tick, long Revision) : WireMessage;
 public sealed record RejectedMessage(string RequestId, string Code, Dictionary<string, string> Arguments) : WireMessage;
 public sealed record SnapshotMessage(long WorldEpoch, long Revision, long Tick, bool Paused, long Cash,
-    MapRead Map, TrainRead[] Trains, StationRead[] Stations, BuildingRead[] Buildings) : WireMessage;
+    MapRead Map, TrainRead[] Trains, StationRead[] Stations, BuildingRead[] Buildings, TrackRead[] Tracks) : WireMessage;
 public sealed record DeltaMessage(long WorldEpoch, long BaseRevision, long Revision, long Tick,
     TrainRead[] Trains, StationRead[] Stations, BuildingRead[] Buildings, RemovedRead Removed) : WireMessage;
 public sealed record RemovedRead(string[] TrainIds, string[] StationIds, string[] BuildingIds);
 public sealed record MapRead(int Width, int Height, int Levels);
 public sealed record PositionRead(int X, int Y, int Z);
-public sealed record TrainRead(string Id, long Revision, string Name, PositionRead Position, int Cars, string Controller);
+public sealed record TrackRead(PositionRead Position, string Shape, long Revision);
+public sealed record TrainRead(string Id, long Revision, string Name, PositionRead Position, int Cars, string Controller,
+    string Direction, PositionRead[] CarPositions, string State);
 public sealed record StationRead(string Id, long Revision, string Name, PositionRead Position);
 public sealed record BuildingRead(string Id, string DefinitionId, PositionRead Position, int Height);
 

@@ -45,4 +45,13 @@ Before networking, extend the schema with full track/scalar changes, input expir
 resync/reset/version-mismatch messages, and the concrete bootstrap/save HTTP
 contract. Specify dedup retention, disconnect grace, request/queue/output bounds,
 and compatibility identifiers while implementing Stage 4. No retry guarantee is
-implemented in Stage 1.
+implemented by the headless session API.
+
+Stage 2 snapshots now contain complete `tracks` (position, shape, revision) and
+train direction, ordered `carPositions`, and state (`moving`, `station`, `buffer`,
+`blocked`). Initial snapshot/join/numeric-boundary fixtures and generated types
+were updated together; the headless initial snapshot equals the shared fixture.
+Track order is stable by z/y/x. Runtime scheduler/held-input diagnostics are
+immutable domain read data, not a save format; complete save conversion is Stage 6.
+The draft save fixture still lacks full train bodies, stop state, input sequence
+and next scheduler-order counter and cannot support continuation as it stands.

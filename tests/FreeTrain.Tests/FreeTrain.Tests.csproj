@@ -6,6 +6,9 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" PrivateAssets="all" />
     <ProjectReference Include="../../src/FreeTrain.Contracts/FreeTrain.Contracts.csproj" />
     <ProjectReference Include="../../src/FreeTrain.Persistence/FreeTrain.Persistence.csproj" />
+    <ProjectReference Include="../../src/FreeTrain.Content/FreeTrain.Content.csproj" />
+    <ProjectReference Include="../../src/FreeTrain.Session/FreeTrain.Session.csproj" />
+    <ProjectReference Include="../../src/FreeTrain.Plugins.ManualController/FreeTrain.Plugins.ManualController.csproj" />
     <None Include="../../prototype/protocol/fixtures/*.json" Link="Fixtures/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

@@ -101,6 +101,29 @@
             "automatic",
             "manual"
           ]
+        },
+        "direction": {
+          "enum": [
+            "north",
+            "east",
+            "south",
+            "west"
+          ]
+        },
+        "carPositions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/Position"
+          }
+        },
+        "state": {
+          "enum": [
+            "moving",
+            "station",
+            "buffer",
+            "blocked"
+          ]
         }
       },
       "required": [
@@ -109,7 +132,10 @@
         "name",
         "position",
         "cars",
-        "controller"
+        "controller",
+        "direction",
+        "carPositions",
+        "state"
       ]
     },
     "Station": {
@@ -240,6 +266,12 @@
           "items": {
             "$ref": "#/$defs/Building"
           }
+        },
+        "tracks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Track"
+          }
         }
       },
       "required": [
@@ -252,7 +284,8 @@
         "map",
         "trains",
         "stations",
-        "buildings"
+        "buildings",
+        "tracks"
       ]
     },
     "Delta": {
@@ -897,6 +930,35 @@
         {
           "$ref": "#/$defs/Delta"
         }
+      ]
+    },
+    "Track": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "position": {
+          "$ref": "#/$defs/Position"
+        },
+        "shape": {
+          "enum": [
+            "eastWest",
+            "northSouth",
+            "curveSE",
+            "curveSW",
+            "curveNE",
+            "curveNW",
+            "junctionE",
+            "buffer"
+          ]
+        },
+        "revision": {
+          "$ref": "#/$defs/Counter"
+        }
+      },
+      "required": [
+        "position",
+        "shape",
+        "revision"
       ]
     }
   }

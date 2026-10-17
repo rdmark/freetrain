@@ -6,7 +6,7 @@ Coordinates are zero-based; x increases east, y south, z upwards. Terrain is
 flat at z=0 with the prebuilt loop at z=1 and 16 available height levels. The
 clock begins at 2000-04-01 08:00 game time (not a local timezone). One tick is
 one game minute; seed/state starts at 477. The PRNG algorithm/state advancement
-must be fixed and tested during extraction before adding random behavior.
+is Park-Miller/Schrage, fixed by vector tests; this scenario consumes no random values.
 
 The rectangular loop spans (8,8)–(28,24), has 72 connected tiles, and a junction
 at (28,16) leads east to eight siding tiles ending in a buffer at (36,16). The
@@ -17,7 +17,7 @@ three-layer member of the 2–5-layer condominium family at (34,22,0) supply
 representative inspectors. Construction prices below are deliberately proposed
 prototype rules, not imported legacy accounting.
 
-Stage 2 behavior cases:
+Stage 2 behavior cases (implemented; see `../../doc/web-prototype-headless.md`):
 
 - Start paused with cash 1,000,000, tick/revision zero and a move event at tick 1.
   Run moves one connected tile per tick; first arrival at the station is tick 8.
@@ -28,18 +28,22 @@ Stage 2 behavior cases:
   fresh event order counters in the implementation.
 - Preview and cancel at (37,16,1) do not change cash. Extending the siding requires
   replacing its existing buffer with an eastWest segment and adding a new buffer
-  at (37,16,1) as one validated operation (extend the draft command when ported).
+  at (37,16,1) as one validated operation. Place `buffer` or `eastWest` at (37,16,1); the
+  existing `buildTrack` intent includes replacement of the west buffer for 200
+  total (100 per changed tile).
   A committed simple track placement costs 100 once. Removal refund is zero.
   Out-of-map, occupied, or otherwise illegal placement is atomic and unchanged.
 - Manual source: Shift on initial station call passes; otherwise wait five minutes.
   Later calls with Up depart, Down reverse, neither waits another five minutes.
   Up has precedence over Down; Left is checked before Right at a junction, with
   valid connections required. Reverse's legacy negative time sentinel must become
-  explicit behavior. Reset/expiry clears all held inputs.
-- Enter a construction tool while running: request pause. Leaving resumes only
+  explicit behavior. Reset/expiry clears all held inputs. Tick expiry is five ticks, before due events;
+  wall-time disconnect expiry remains Stage 4 work.
+- Later client/lifecycle acceptance (Stage 4/5): enter a construction tool while running: request pause. Leaving resumes only
   if the tool caused the pause. Enter/leave while already paused keeps it paused.
   The tool/previous-pause bookkeeping is client-local, not world save data.
-- Rename station to `新中央駅`, save in either UI language and reopen in the other.
+- Rename to `新中央駅` is implemented headlessly. Save/UI acceptance (Stage 6):
+  save in either UI language and reopen in the other.
   Continue scheduled movements exactly as an uninterrupted run; keep camera and
   language out of the save.
 - Run two fresh isolated hosts for 10,000 ticks and compare traces, but also assert
@@ -55,3 +59,8 @@ pricing. Keep accepted corrections here and in fixtures/tests together.
 culling (including layers and effects). Its generation, camera cuts, and actual
 visible counts are Stage 5/7 work. The rendering target is provisional, measured
 at 1920×1080; scene specification is not benchmark evidence.
+
+Stage 2 trace evidence is in `reference-v1-trace.json`. Two fresh 10,000-tick
+runs match complete state/event frames, with legal car positions/connections,
+132 station arrivals/departures and straight junction events, and 9,472 moves.
+The standalone headless CLI reproduces the same SHA-256.
